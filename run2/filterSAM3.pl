@@ -155,9 +155,21 @@ if (scalar @ARGV > 5) {
     my @spl = split("\t", $line);
     $tot{"$spl[1] $spl[3]"}++;
     if (($spl[$#spl-1] eq "external") && ($spl[$#spl] > $maxExt)) {
-      $xExt{"$spl[1] $spl[3]"}++;
+      $xExt{"$spl[1] $spl[3]"}++;  # external artifact
       next;
     }
+
+    # determine if new alignment is valid --
+    #   scoring function similar to bowtie2's default,
+    #   but considering only subs ($spl[2])
+    my $len = length $spl[7];  # length of ref.
+    $spl[3] =~ m/^(\d+)([ID])/;
+    $len -= $1 if ($2 eq 'I');
+    if ($spl[2] > (0.6*$len+0.6) / 5) {
+      $xInv{"$spl[1] $spl[3]"}++;  # invalid new alignment
+      next;
+    }
+
     my $read = shift @spl;
     $aln{$read} = join("\t", @spl);
   }
@@ -279,72 +291,61 @@ while ($line) {
   # check for new alignment
   if (exists $aln{$spl[0]}) {
 
-    # determine if new alignment is valid --
-    #   scoring function similar to bowtie2's default,
-    #   but considering only subs ($xm)
+    # construct new SAM record
     my @div = split("\t", $aln{$spl[0]});
     delete $aln{$spl[0]};
-    my $len = length $div[6];  # length of ref.
+    my $mapq = 255;       # mapping quality (255 = "unavailable")
+    my $xm = $div[1];     # number of subs
+    my $as = -5*$xm - 1 ; # for AS, count subs as -5 each, in/del as -1 only
+    my $rec = "$spl[0]\t0\t$div[3]\t$div[4]\t$mapq\t$div[5]".
+      "\t*\t0\t0\t$div[6]\t$div[7]\tAS:i:$as";
     $div[2] =~ m/^(\d+)([ID])/;
-    my $xg = $1;               # length of gap
-    $len -= $xg if ($2 eq 'I');
-    my $xm = $div[1];          # number of subs
-    if ($xm > (0.6*$len+0.6) / 5) {
-      $xInv{"$div[0] $div[2]"}++;  # invalid new alignment
+    my $xg = $1;          # length of gap
+    my $xn = 0;           # assume no Ns in ref
+    my $xo = 1;           # 1 gap open, by definition
+    my $nm = $xm + $xg;   # "edit distance"
+    my $rec2 = "\tXN:i:$xn\tXM:i:$xm\tXO:i:$xo\tXG:i:$xg".
+      "\tNM:i:$nm\tMD:Z:$div[8]";
+
+    # compare new alignment to previous (if any)
+    #   (consider only number of subs [XM])
+    my $x;  # index to insert new alignment into @res
+    for ($x = 0; $x < scalar @res; $x++) {
+      my @fun = split("\t", $res[$x]);
+      my $oldXM = getTag("XM", @fun);  # number of subs
+      if ($xm < $oldXM || (($div[$#div-1] eq "external")
+          && ($xm == $oldXM))) {
+        last;
+      }
+    }
+    if ($x <= $idx) {
+      # save previous alignment info
+      my @fun = split("\t", $res[$idx]);
+      $rec2 .= "\tOP:i:$fun[3]\tOC:Z:$fun[5]";
+      $idx = $x;
+      $yBetter{"$div[0] $div[2]"}++; # new alignment is better
+    } elsif ($idx != -1) {
+      $xWorse{"$div[0] $div[2]"}++;  # previous alignment is better
     } else {
+      $yUnmap{"$div[0] $div[2]"}++;  # previously unmapped to correct loc.
+    }
+    $rec2 .= "\tYT:Z:UU";
 
-      # valid new alignment: construct new SAM record
-      my $mapq = 255;  # mapping quality (255 = "unavailable")
-      my $as = -5*$xm - 1 ; # for AS, count subs as -5 each, in/del as -1 only
-      my $rec = "$spl[0]\t0\t$div[3]\t$div[4]\t$mapq\t$div[5]".
-        "\t*\t0\t0\t$div[6]\t$div[7]\tAS:i:$as";
-      my $xn = 0;               # assume no Ns in ref
-      my $xo = 1;               # 1 gap open, by definition
-      my $nm = $xm + $xg;       # "edit distance"
-      my $rec2 = "\tXN:i:$xn\tXM:i:$xm\tXO:i:$xo\tXG:i:$xg".
-        "\tNM:i:$nm\tMD:Z:$div[8]";
+    if (@res && !$x) {
+      my $oldAS = getTag("AS", split("\t", $res[$x]));
+      $rec .= "\tXS:i:$oldAS";  # save new XS
+    }
 
-      # compare new alignment to previous (if any)
-      #   (consider only number of subs [XM])
-      my $x;  # index to insert new alignment into @res
-      for ($x = 0; $x < scalar @res; $x++) {
-        my @fun = split("\t", $res[$x]);
-        my $oldXM = getTag("XM", @fun);  # number of subs
-        if ($xm < $oldXM || (($div[$#div-1] eq "external")
-            && ($xm == $oldXM))) {
-          last;
-        }
-      }
-      if ($x <= $idx) {
-        # save previous alignment info
-        my @fun = split("\t", $res[$idx]);
-        $rec2 .= "\tOP:i:$fun[3]\tOC:Z:$fun[5]";
-        $idx = $x;
-        $yBetter{"$div[0] $div[2]"}++; # new alignment is better
-      } elsif ($idx != -1) {
-        $xWorse{"$div[0] $div[2]"}++;  # previous alignment is better
-      } else {
-        $yUnmap{"$div[0] $div[2]"}++;  # previously unmapped to correct loc.
-      }
-      $rec2 .= "\tYT:Z:UU";
-
-      if (@res && !$x) {
-        my $oldAS = getTag("AS", split("\t", $res[$x]));
-        $rec .= "\tXS:i:$oldAS";  # save new XS
-      }
-
-      # add new SAM record to @res
-      splice(@res, $x, 0, $rec.$rec2);
+    # add new SAM record to @res
+    splice(@res, $x, 0, $rec.$rec2);
 if (scalar @res > 2) {
 print LOG "realignment of $spl[0]\n";
 print LOG "new record is #$x\n";
 for (my $y = 0; $y < scalar @res; $y++) { print LOG "$res[$y]\n"; }
 print LOG "\n";
 }
-      $real++;
-      $pral++ if (!$x);
-    }
-
+    $real++;
+    $pral++ if (!$x);
   }
 
   # print output
