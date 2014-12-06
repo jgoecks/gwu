@@ -75,7 +75,8 @@ while (my $line = <FQ>) {
   chomp $line;
   my @spl = split(" ", $line);  # $spl[0] is name, $spl[2] is amplicon
                                 # $spl[$#spl] is cig I/D
-  die "$ARGV[0] is improperly formatted\n" if (scalar @spl < 5);
+  die "$ARGV[0] is improperly formatted\n"
+    if (scalar @spl < 5 || $spl[$#spl] !~ m/[ID]/);
   my $read = substr($spl[0], 1);
   $line = <FQ>;
   chomp $line;
@@ -174,7 +175,7 @@ foreach my $am (sort keys %seq) {
 
     # evaluate external deletions for artifacts (i.e. if primer is internal match)
     #   (skip external insertions -- how to evaluate them?)
-    my $match = 0; my $total = 0;
+    my $score = -1;
     if ((!$firstM) && $best =~ m/D/) {
       my $prim; my $del;  # primer and genomic sequences
       if ($best =~ m/\D0M$/) {
@@ -188,17 +189,8 @@ foreach my $am (sort keys %seq) {
       }
 
       # score match of primer to genomic segment
-      for (my $x = 0; $x < length $prim; $x++) {
-        # weighting fxn: if match, add position to score
-        #       weighted 5x if in last 12 bases, 25x if the last base
-        my $val = ($x < -12 + length $prim ? $x+1 :
-          ($x < -1 + length $prim ? 5*($x+1) : 25*($x+1)));
-        $total += $val;
-        if (substr($prim, $x, 1) eq substr($del, $x, 1)) {
-          $match += $val;
-        }
-      }
-      printf LOG "\texternal\tprimerScore:\t%.3f\t($match/$total)\n", $match/$total;
+      $score = scoreAlign($del, $prim);
+      printf LOG "\texternal\t%.3f\n", $score;
     }
 
     # produce output -- info for a SAM record
@@ -210,7 +202,7 @@ foreach my $am (sort keys %seq) {
       for (my $x = 0; $x < scalar @spl; $x++) {
         print OUT "$spl[$x]\t$am\t$md1\t$cut[0]\t$loc{$am}\t$best\t$que[0]",
           "\t$qual{$spl[$x]}\t$md0";
-        printf OUT "\texternal\t%.3f", $match/$total if ($total);
+        printf OUT "\texternal\t%.3f", $score if ($score != -1);
         print OUT "\n";
       }
       delete $rep{$que[0]};
@@ -324,4 +316,33 @@ sub findMax {
     }
   }
   return $max ? "$seq $max" : "";
+}
+
+# score alignment -- no in/dels allowed
+# weighting function (from 5' end):
+#   bases before last 20: 1
+#   bases 1-10:           2*pos
+#   bases 11-19:          3*pos
+#   base 20:              5*pos
+sub scoreAlign {
+  my $que = $_[0];
+  my $ref = $_[1];
+  my $len = length $que;
+
+  my $score = 0; my $total = 0;
+  for (my $x = 0; $x < $len; $x++) {
+    my $val = 21 - $len + $x;  # value of match at this position
+    if ($val > 19) {
+      $val *= 5;
+    } elsif ($val > 10) {
+      $val *= 3;
+    } elsif ($val > 0) {
+      $val *= 2;
+    } else {
+      $val = 1;
+    }
+    $score += $val if (substr($ref, $x, 1) eq substr($que, $x, 1));
+    $total += $val;
+  }
+  return $score / $total;
 }

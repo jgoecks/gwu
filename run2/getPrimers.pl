@@ -12,7 +12,13 @@ use warnings;
 sub usage {
   print q(Usage: perl getPrimers.pl  <infile>  <genome>  <outfile>
   Required:
-    <infile>   BED file listing locations of primers
+    <infile>   BED file listing locations of primers, tab-delimited.
+                 For example:
+                   chr7   127413326   127413347   amplicon1
+                   chr7   127413430   127413448   amplicon1
+                   chr9   89010943    89010965    amplicon2
+                   chr9   89011062    89011085    amplicon2
+                 Two primers are required for each amplicon.
     <genome>   Fasta file of reference genome
     <outfile>  Output file containing primer and target sequences
 );
@@ -32,6 +38,11 @@ my %pos;
 while (my $line = <BED>) {
   chomp $line;
   my @spl = split("\t", $line);
+  if (scalar @spl < 4) {
+    print "Improperly formatted line in BED file: $line\n",
+      "Need chromName, chromStart, chromEnd, and ampliconName (tab-delimited)\n";
+    next;
+  }
   if (exists $pos{$spl[3]}) {
     my @div = split("\t", $pos{$spl[3]});
     if ($div[0] ne $spl[0]) {
@@ -58,7 +69,7 @@ foreach my $amp (keys %pos) {
   my @spl = split("\t", $pos{$amp});
   if (scalar @spl < 5) {
     print "Warning: skipping amplicon $amp -- ",
-      "two primers not specified\n";
+      "not enough info in BED file\n";
     next;
   }
   $loc{$spl[0]}{$amp} = "$spl[1]\t$spl[2]\t$spl[3]\t$spl[4]";
