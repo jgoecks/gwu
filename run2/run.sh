@@ -10,7 +10,7 @@ file1=          # Input FASTQ file #1
 file2=          # Input FASTQ file #2
 bed=            # BED file listing locations of primers
 gen=            # reference genome (FASTA)
-idx=            # bowtie2 indexes (will be generated if not specified)
+idx=            # bowtie2 indexes (will be generated if necessary)
 dir=.           # output directory
 
 # check input files
