@@ -88,7 +88,7 @@ close OUT2;
 close CHI;
 
 # singletons in $ARGV[0]
-foreach my $re (keys %pr) {
+foreach my $re (sort keys %pr) {
   print SING $seq{$re};
 }
 close SING;

@@ -140,7 +140,7 @@ close ALT;
 
 # load realignments
 my %aln;  # for new alignments
-my %tot; my %xExt; my %xInv; my %xWorse; my %xFil;
+my %tot; my %xExt; my %xInv; my %xWorse; my %xSame; my %xFil;
   my %yBetter; my %yUnmap;  # counting variables
 if (scalar @ARGV > 5) {
   my $maxExt = 0.75;  # maximum match of external in/del to consider --
@@ -318,34 +318,56 @@ while ($line) {
         last;
       }
     }
-    if ($x <= $idx) {
-      # save previous alignment info
+
+    my $skip = 0;
+    if ($idx != -1) {
+      # compare to previous correct map
       my @fun = split("\t", $res[$idx]);
-      $rec2 .= "\tOP:i:$fun[3]\tOC:Z:$fun[5]";
-      $idx = $x;
-      $yBetter{"$div[0] $div[2]"}++; # new alignment is better
-    } elsif ($idx != -1) {
-      $xWorse{"$div[0] $div[2]"}++;  # previous alignment is better
+      if ($x <= $idx) {
+        # save previous alignment info
+        $rec2 .= "\tOP:i:$fun[3]\tOC:Z:$fun[5]";
+        $idx = $x;
+        $yBetter{"$div[0] $div[2]"}++; # new alignment is better
+      } else {
+        # compare CIGARs
+        my $d = 0; my $i = 0;
+        while ($fun[5] =~ m/(\d+)([ID])/g) {
+          $d += $1 if ($2 eq 'D');
+          $i += $1 if ($2 eq 'I');
+        }
+        while ($div[5] =~ m/(\d+)([ID])/g) {
+          $d -= $1 if ($2 eq 'D');
+          $i -= $1 if ($2 eq 'I');
+        }
+        if (!$d && !$i) {
+          $xSame{"$div[0] $div[2]"}++;  # equiv. I/D
+          $skip = 1 if ($fun[5] eq $div[5]);  # skip identical realignment
+        } else {
+          $xWorse{"$div[0] $div[2]"}++;  # prev. alignment is better (or equal)
+        }
+      }
     } else {
       $yUnmap{"$div[0] $div[2]"}++;  # previously unmapped to correct loc.
     }
-    $rec2 .= "\tYT:Z:UU";
 
+    $rec2 .= "\tYT:Z:UU";
     if (@res && !$x) {
       my $oldAS = getTag("AS", split("\t", $res[$x]));
       $rec .= "\tXS:i:$oldAS";  # save new XS
     }
 
     # add new SAM record to @res
-    splice(@res, $x, 0, $rec.$rec2);
+    if (! $skip) {
+      splice(@res, $x, 0, $rec.$rec2);
 if (scalar @res > 2) {
 print LOG "realignment of $spl[0]\n";
 print LOG "new record is #$x\n";
 for (my $y = 0; $y < scalar @res; $y++) { print LOG "$res[$y]\n"; }
 print LOG "\n";
 }
-    $real++;
-    $pral++ if (!$x);
+      $real++;
+      $pral++ if (!$x);
+    }
   }
 
   # print output
@@ -385,7 +407,7 @@ foreach my $x (keys %aln) {
 # print realignment log information
 if (scalar @ARGV > 6) {
   print LOG "Amplicon\tIn/Del\tBetterMap\tNewMap\tInvalidExternalInDel\t",
-    "InvalidNewMap\tWorseMap\tFiltered\tTotal\n";
+    "InvalidNewMap\tWorseMap\tSame/EquivMap\tFiltered\tTotal\n";
   foreach my $x (sort keys %tot) {
     my @div = split(" ", $x);
     print LOG "$div[0]\t$div[1]\t",
@@ -394,6 +416,7 @@ if (scalar @ARGV > 6) {
       (exists $xExt{$x} ? $xExt{$x} : 0), "\t",
       (exists $xInv{$x} ? $xInv{$x} : 0), "\t",
       (exists $xWorse{$x} ? $xWorse{$x} : 0), "\t",
+      (exists $xSame{$x} ? $xSame{$x} : 0), "\t",
       (exists $xFil{$x} ? $xFil{$x} : 0), "\t",
       (exists $tot{$x} ? $tot{$x} : 0), "\n";
   }
