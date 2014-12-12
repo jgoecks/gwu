@@ -18,10 +18,10 @@ if test ! -f $file1 || test ! -f $file2; then
   echo "Input FASTQ files not found"
   exit
 elif test ! -f $bed; then
-  echo "Input primer BED file not found"
+  echo "Input primer BED file $bed not found"
   exit
 elif test ! -f $gen; then
-  echo "Input reference genome not found"
+  echo "Input reference genome $gen not found"
   exit
 fi
 
