@@ -1,0 +1,26 @@
+<tool id="filtervcf" name="Filter VCF">
+  <description> by removing variants outside of target regions</description>
+  <command interpreter="perl">
+    filterVCF.pl $vcf $bed $out
+  </command>
+  <inputs>
+    <param format="vcf" name="vcf" type="data" label="Variants file" help="Should be of the format produced by freebayes"/>
+    <param format="bed" name="bed" type="data" label="File listing primer locations"/>
+  </inputs>
+  <outputs>
+    <data format="vcf" name="out" label="${tool.name} on ${on_string}"/>
+  </outputs>
+
+  <help>
+This tool filters a VCF file based on locations of variants. It removes
+variants that fall outside of the target regions.
+
+It is designed to analyze a VCF file of the format produced by freebayes.
+Because that program can call MNPs ("haplotypes"), this tool checks each
+variant position of an allele; if any is within a target region, the variant
+is kept. Also, freebayes sometimes calls multiple MNPs at one position;
+currently, this tool keeps all the alleles at a position if at least one has
+a variant within a target region.
+  </help>
+
+</tool>

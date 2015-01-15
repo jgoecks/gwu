@@ -1,0 +1,46 @@
+<tool id="getcommon" name="Sort unjoined reads">
+  <description> after separate primer removal</description>
+  <command interpreter="perl">
+    getCommon.pl $in1 $in2 $out1 $out2
+    #if str($sing_opt) == "true":
+      $single
+    #end if
+    #if str($chim_opt) == "true":
+      #if str($sing_opt) == "false":
+        None
+      #end if
+      $chim
+    #end if
+  </command>
+  <inputs>
+    <param format="fastq" name="in1" type="data" label="FASTQ file #1" help="Reads with primer(s) removed, of the format produced by the tool &quot;Remove PCR primers&quot;."/>
+    <param format="fastq" name="in2" type="data" label="FASTQ file #2" help="Reads with primer(s) removed, of the format produced by the tool &quot;Remove PCR primers&quot;."/>
+    <param name="sing_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like an output file of singleton (unmatched) reads"/>
+    <param name="chim_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like an output file of chimera reads" help="Paired reads that had different amplicon's primers removed."/>
+  </inputs>
+  <outputs>
+    <data format="fastq" name="out1" label="${tool.name} on ${on_string}: common reads #1"/>
+    <data format="fastq" name="out2" label="${tool.name} on ${on_string}: common reads #2"/>
+    <data format="fastq" name="single" label="${tool.name} on ${on_string}: singleton reads">
+      <filter>sing_opt is True</filter>
+    </data>
+    <data format="fastq" name="chim" label="${tool.name} on ${on_string}: chimera reads">
+      <filter>chim_opt is True</filter>
+    </data>
+  </outputs>
+
+  <help>
+This tool sorts paired reads after separate processing by the tool "Remove
+PCR primers".
+
+Paired reads that have had the same amplicon's primers removed are written to
+separate files (common #1, common #2) in preparation for joining by fastq_join.
+
+Reads whose pair failed the primer removal step are classified as singleton
+reads.
+
+Paired reads that had different amplicon's primers removed are classified as
+chimeras.
+  </help>
+
+</tool>
