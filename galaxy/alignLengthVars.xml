@@ -28,8 +28,7 @@
           <options from_data_table="all_fasta"/>
         </param>
       </when>
-      <when value="no">
-      </when>
+      <when value="no"/>
     </conditional>
 
   </inputs>

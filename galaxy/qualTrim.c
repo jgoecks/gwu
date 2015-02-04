@@ -170,12 +170,12 @@ int checkQual(char* line, int st, int end, float avg) {
  */
 void readFile(FILE* in, FILE* out, int len, float qual,
     float avg, int minLen) {
-  char* head = (char*) memalloc(HEADER);
+  char* head = (char*) memalloc(MAX_SIZE);
   char* seq = (char*) memalloc(MAX_SIZE);
   char* line = (char*) memalloc(MAX_SIZE);
 
   int count = 0, elim = 0;
-  while (fgets(head, HEADER, in) != NULL) {
+  while (fgets(head, MAX_SIZE, in) != NULL) {
     if (head[0] != '@')
       continue;
 

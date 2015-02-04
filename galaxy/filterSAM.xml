@@ -29,8 +29,7 @@
         <param name="pct" type="float" value="0.75" min="0" max="1" label="Maximum primer match score threshhold for external in/dels (0-1)" help="Primer scores above this value will be considered good enough matches to explain the length variant as an artifact. See &quot;External in/dels&quot; and &quot;Primer matching score&quot; sections below for more information."/>
         <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like a log file of the realignments"/>
       </when>
-      <when value="no">
-      </when>
+      <when value="no"/>
     </conditional>
 
   </inputs>

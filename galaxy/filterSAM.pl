@@ -235,8 +235,21 @@ while ($line) {
       die "Supp. alignment: $line\n" if ($div[1] & 0x800);
       my $xs = getTag("AS", @div);
 
+      # get location, accounting for in/dels
+      my $off = 0;
+      while ($div[5] =~ m/(\d+)([ID])/g) {
+        if ($2 eq 'D') {
+          $off += $1;
+        } elsif ($2 eq 'I') {
+          $off -= $1;
+        }
+      }
+      # save 1st position after fwd primer:
+      my $rc = ($div[1] & 0x10 ? 1 : 0);  # read maps to minus strand
+      my $pos = ($rc ? $div[3] + $off + length $div[9] : $div[3]);
+
       # mapped to correct location?
-      if (($div[2] eq $cut[0]) && ($div[3] > $cut[1]) && ($div[3] < $cut[2])) {
+      if (($div[2] eq $cut[0]) && ($pos > $cut[1]) && ($pos < $cut[2])) {
         push @res, $line;          # save correct mapping
         $idx = $#res;              # save index
         $map = 1 if ($xs == $as);  # equivalent to primary
@@ -244,9 +257,8 @@ while ($line) {
         # not mapped to correct location: determine if it is legit
 
         # load removed-primer info
-        my $rc = ($div[1] & 0x10 ? 1 : 0);  # read maps to minus strand
         my $pr = "";  # for primer name and (both|one)
-        if (exists $dup{$spl[0]}) {
+        if (exists $dup{$div[0]}) {
           my $test = ($rc ? revComp($div[9]) : $div[9]);
           foreach my $seq (keys %{$dup{$div[0]}}) {
             if ($test eq $seq) {
@@ -263,18 +275,6 @@ while ($line) {
           $line = <SAM>;
           next;
         }
-
-        # get location, accounting for in/dels
-        my $off = 0;
-        while ($div[5] =~ m/(\d+)([ID])/g) {
-          if ($2 eq 'D') {
-            $off += $1;
-          } elsif ($2 eq 'I') {
-            $off -= $1;
-          }
-        }
-        # save 1st position after fwd primer:
-        my $pos = ($rc ? $div[3] + $off + length $div[9] : $div[3]);
 
         # check alternative location
         my $lc = ($rc ? '-' : '+')."\t$div[2]\t$pos"; # 2nd key to %alt
@@ -297,76 +297,80 @@ while ($line) {
   # check for new alignment
   if (exists $aln{$spl[0]}) {
 
-    # construct new SAM record
     my @div = split("\t", $aln{$spl[0]});
-    delete $aln{$spl[0]};
-    my $mapq = 255;       # mapping quality (255 = "unavailable")
-    my $xm = $div[1];     # number of subs
-    my $as = -5*$xm - 1 ; # for AS, count subs as -5 each, in/del as -1 only
-    my $rec = "$spl[0]\t0\t$div[3]\t$div[4]\t$mapq\t$div[5]".
-      "\t*\t0\t0\t$div[6]\t$div[7]\tAS:i:$as";
-    $div[2] =~ m/^(\d+)([ID])/;
-    my $xg = $1;          # length of gap
-    my $xn = 0;           # assume no Ns in ref
-    my $xo = 1;           # 1 gap open, by definition
-    my $nm = $xm + $xg;   # "edit distance"
-    my $rec2 = "\tXN:i:$xn\tXM:i:$xm\tXO:i:$xo\tXG:i:$xg".
-      "\tNM:i:$nm\tMD:Z:$div[8]";
+    my $seq = ($spl[1] & 0x10 ? revComp($spl[9]) : $spl[9]);
+    if ($div[6] eq $seq) {
+      delete $aln{$spl[0]};
 
-    # compare new alignment to previous (if any)
-    #   (consider only number of subs [XM])
-    my $x;  # index to insert new alignment into @res
-    for ($x = 0; $x < scalar @res; $x++) {
-      my @fun = split("\t", $res[$x]);
-      my $oldXM = getTag("XM", @fun);  # number of subs
-      if ($xm < $oldXM || (($div[$#div-1] eq "external")
-          && ($xm == $oldXM))) {
-        last;
+      # construct new SAM record
+      my $mapq = 255;       # mapping quality (255 = "unavailable")
+      my $xm = $div[1];     # number of subs
+      my $as = -5*$xm - 1 ; # for AS, count subs as -5 each, in/del as -1 only
+      my $rec = "$spl[0]\t0\t$div[3]\t$div[4]\t$mapq\t$div[5]".
+        "\t*\t0\t0\t$div[6]\t$div[7]\tAS:i:$as";
+      $div[2] =~ m/^(\d+)([ID])/;
+      my $xg = $1;          # length of gap
+      my $xn = 0;           # assume no Ns in ref
+      my $xo = 1;           # 1 gap open, by definition
+      my $nm = $xm + $xg;   # "edit distance"
+      my $rec2 = "\tXN:i:$xn\tXM:i:$xm\tXO:i:$xo\tXG:i:$xg".
+        "\tNM:i:$nm\tMD:Z:$div[8]";
+
+      # compare new alignment to previous (if any)
+      #   (consider only number of subs [XM])
+      my $x;  # index to insert new alignment into @res
+      for ($x = 0; $x < scalar @res; $x++) {
+        my @fun = split("\t", $res[$x]);
+        my $oldXM = getTag("XM", @fun);  # number of subs
+        if ($xm < $oldXM || (($div[$#div-1] eq "external")
+            && ($xm == $oldXM))) {
+          last;
+        }
       }
-    }
 
-    my $skip = 0;
-    if ($idx != -1) {
-      # compare to previous correct map
-      my @fun = split("\t", $res[$idx]);
-      if ($x <= $idx) {
-        # save previous alignment info
-        $rec2 .= "\tOP:i:$fun[3]\tOC:Z:$fun[5]";
-        $idx = $x;
-        $yBetter{"$div[0] $div[2]"}++; # new alignment is better
-      } else {
-        # compare CIGARs
-        my $d = 0; my $i = 0;
-        while ($fun[5] =~ m/(\d+)([ID])/g) {
-          $d += $1 if ($2 eq 'D');
-          $i += $1 if ($2 eq 'I');
-        }
-        while ($div[5] =~ m/(\d+)([ID])/g) {
-          $d -= $1 if ($2 eq 'D');
-          $i -= $1 if ($2 eq 'I');
-        }
-        if (!$d && !$i) {
-          $xSame{"$div[0] $div[2]"}++;  # equiv. I/D
-          $skip = 1 if ($fun[5] eq $div[5]);  # skip identical realignment
+      my $skip = 0;
+      if ($idx != -1) {
+        # compare to previous correct map
+        my @fun = split("\t", $res[$idx]);
+        if ($x <= $idx) {
+          # save previous alignment info
+          $rec2 .= "\tOP:i:$fun[3]\tOC:Z:$fun[5]";
+          $idx = $x;
+          $yBetter{"$div[0] $div[2]"}++; # new alignment is better
         } else {
-          $xWorse{"$div[0] $div[2]"}++;  # prev. alignment is better (or equal)
+          # compare CIGARs
+          my $d = 0; my $i = 0;
+          while ($fun[5] =~ m/(\d+)([ID])/g) {
+            $d += $1 if ($2 eq 'D');
+            $i += $1 if ($2 eq 'I');
+          }
+          while ($div[5] =~ m/(\d+)([ID])/g) {
+            $d -= $1 if ($2 eq 'D');
+            $i -= $1 if ($2 eq 'I');
+          }
+          if (!$d && !$i) {
+            $xSame{"$div[0] $div[2]"}++;  # equiv. I/D
+            $skip = 1 if ($fun[5] eq $div[5]);  # skip identical realignment
+          } else {
+            $xWorse{"$div[0] $div[2]"}++;  # prev. alignment is better (or equal)
+          }
         }
+      } else {
+        $yUnmap{"$div[0] $div[2]"}++;  # previously unmapped to correct loc.
       }
-    } else {
-      $yUnmap{"$div[0] $div[2]"}++;  # previously unmapped to correct loc.
-    }
 
-    $rec2 .= "\tYT:Z:UU";
-    if (@res && !$x) {
-      my $oldAS = getTag("AS", split("\t", $res[$x]));
-      $rec .= "\tXS:i:$oldAS";  # save new XS
-    }
+      $rec2 .= "\tYT:Z:UU";
+      if (@res && !$x) {
+        my $oldAS = getTag("AS", split("\t", $res[$x]));
+        $rec .= "\tXS:i:$oldAS";  # save new XS
+      }
 
-    # add new SAM record to @res
-    if (! $skip) {
-      splice(@res, $x, 0, $rec.$rec2);
-      $real++;
-      $pral++ if (!$x);
+      # add new SAM record to @res
+      if (! $skip) {
+        splice(@res, $x, 0, $rec.$rec2);
+        $real++;
+        $pral++ if (!$x);
+      }
     }
   }
 
@@ -398,16 +402,17 @@ while ($line) {
 close SAM;
 close OUT;
 
-# count realignments not used
-foreach my $x (keys %aln) {
-  my @div = split("\t", $aln{$x});
-  $xFil{"$div[0] $div[2]"}++;
-}
-
 # print realignment log information
 if (scalar @ARGV > 6) {
   print LOG "Amplicon\tIn/Del\tBetter\tNew\tExternalInDel\t",
     "Invalid\tWorse\tSame/Equiv\tFiltered\tTotal\n";
+
+  # count realignments not used
+  foreach my $x (keys %aln) {
+    my @div = split("\t", $aln{$x});
+    $xFil{"$div[0] $div[2]"}++;
+  }
+
   foreach my $x (sort keys %tot) {
     my @div = split(" ", $x);
     print LOG "$div[0]\t$div[1]\t",

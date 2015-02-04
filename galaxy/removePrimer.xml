@@ -32,7 +32,7 @@
   <inputs>
     <param format="fastq,fasta" name="in" type="data" label="File containing query reads" help="FASTA or FASTQ format"/>
     <param format="tabular" name="prim" type="data" label="File listing primer sequences" help="See &quot;Primer file&quot; section below for formatting information."/>
-    <param name="require" type="boolean" truevalue="-rq" falsevalue="" checked="false" label="Would you like to require that both primers be found?" help="By default, only one primer match (at the beginning of the read) is required for a read to be processed."/>
+    <param name="require" type="boolean" truevalue="-rq" falsevalue="" checked="false" label="Check if you would like to require that both primers be found" help="By default, only one primer match (at the beginning of the read) is required for a read to be processed."/>
 
     <conditional name="output">
       <param name="output_selector" type="select" label="Would you like to choose additional output files?" help="By default, one output file (listing reads with primers removed) is produced.">
@@ -44,8 +44,7 @@
         <param name="nonmatch_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like an output file listing reads that failed primer matching"/>
         <param name="correct_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like an output file listing reads with correct primers reattached" help="Should be selected only if requiring both primers be removed."/>
       </when>
-      <when value="no">
-      </when>
+      <when value="no"/>
     </conditional>
 
     <conditional name="extended">
@@ -68,8 +67,7 @@
             <param name="rl" type="integer" value="0" min="0" label="Length of the second primer to search for (internal matching)" help="Choosing a large value (e.g. 100) will ensure full-length matching regardless of primer length."/>
             <param name="el" type="integer" value="0" min="0" label="Mismatches to the second primer to allow (internal matching)"/>
           </when>
-          <when value="no">
-          </when>
+          <when value="no"/>
         </conditional>
 
         <conditional name="bedlength">
@@ -81,13 +79,11 @@
             <param format="bed" name="bed" type="data" label="File listing primer locations"/>
             <param name="bp" type="text" value="0" label="Position (or range of positions) at which to begin searching for the second primer based on expected length" help="Default of 0 means the search will begin at the expected length only. Specifying a range such as -1,1 (comma-separated, no spaces) will allow the second primer to match starting at positions -1, 0, or 1 with respect to the expected length."/>
           </when>
-          <when value="no">
-          </when>
+          <when value="no"/>
         </conditional>
 
       </when>
-      <when value="no">
-      </when>
+      <when value="no"/>
 
     </conditional>
 

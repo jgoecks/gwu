@@ -6,7 +6,6 @@
 */
 
 #define MAX_SIZE    1024   // maximum length for input line
-#define HEADER      100    // maximum header length
 
 #define HELP        "-h"
 #define INFILE      "-i"

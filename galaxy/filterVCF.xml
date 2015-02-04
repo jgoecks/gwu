@@ -20,7 +20,9 @@ Because that program can call MNPs ("haplotypes"), this tool checks each
 variant position of an allele; if any is within a target region, the variant
 is kept. Also, freebayes sometimes calls multiple MNPs at one position;
 currently, this tool keeps all the alleles at a position if at least one has
-a variant within a target region.
+a variant within a target region (alternatively, one can use the vcflib
+program *vcfbreakmulti* to separate multiple alleles into their own VCF
+records).
   </help>
 
 </tool>
