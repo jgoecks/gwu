@@ -37,7 +37,7 @@ while (my $line = <BED>) {
   chomp $line;
   my @spl = split("\t", $line);
   if (scalar @spl < 4) {
-    print "Improperly formatted line in BED file: $line\n",
+    print "Warning! Improperly formatted line in $ARGV[0]: $line\n  ",
       "Need chromName, chromStart, chromEnd, and ampliconName (tab-delimited)\n";
     next;
   }

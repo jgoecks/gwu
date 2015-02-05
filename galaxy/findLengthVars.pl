@@ -46,7 +46,7 @@ while (my $line = <BED>) {
   chomp $line;
   my @spl = split("\t", $line);
   if (scalar @spl < 4) {
-    print "Improperly formatted line in BED file: $line\n",
+    print "Warning! Improperly formatted line in $ARGV[1]: $line\n  ",
       "Need chromName, chromStart, chromEnd, and ampliconName (tab-delimited)\n";
     next;
   }
@@ -70,32 +70,51 @@ while (my $line = <BED>) {
 }
 close BED;
 
+# check and reconfigure expected lengths hash
+foreach my $k (keys %pos) {
+  my @spl = split("\t", $pos{$k});
+  if (scalar @spl < 4) {
+    print "Warning! Insufficient information in $ARGV[1] for amplicon $k\n";
+    delete $pos{$k};
+  } else {
+    $pos{$k} = $spl[3];
+  }
+}
+
 # parse fastq file
 my $count = 0;
 my %tot;  # for lengths of each amplicon
 my %len;  # for length variants
-while (my $line1 = <IN>) {
-  next if (substr($line1, 0, 1) ne "@");
-  chomp $line1;
-  my @spl = split(" ", $line1);  # $spl[2] has amplicon name
-  die "$ARGV[0] is not properly formatted\n",
-    "No amplicon name in read header $line1\n" if (scalar @spl < 3);
+while (my $line = <IN>) {
+  next if (substr($line, 0, 1) ne "@");
+  chomp $line;
 
-  if (! exists $pos{$spl[2]}) {
-    print "$spl[0] has unknown amplicon $spl[2]\n";
+  # determine amplicon ID
+  my @spl = split(" ", $line);
+  my $id = "";
+  for (my $x = 1; $x < scalar @spl; $x++) {
+    if ($spl[$x] eq "fwd" || $spl[$x] eq "rev") {
+      $id = $spl[$x-1];
+      last;
+    }
+  }
+  die "Error! $ARGV[0] is improperly formatted:\n  ",
+    "no amplicon ID in $line\n" if (!$id);
+
+  if (! exists $pos{$id}) {
+    print "Warning! Skipping read $spl[0] with unknown amplicon $id\n";
     for (my $x = 0; $x < 3; $x++) {
-      my $line = <IN>;
+      $line = <IN>;
     }
     next;
   }
-  my $line = <IN>;
+  $line = <IN>;
   chomp $line;
   $count++;
   my $ln = length $line;
-  $tot{$spl[2]}++;
+  $tot{$id}++;
   # record length if it is variant
-  my @div = split("\t", $pos{$spl[2]});
-  $len{$spl[2]}{$ln}++ if (abs($ln - $div[3]) >= $dist);
+  $len{$id}{$ln}++ if (abs($ln - $pos{$id}) >= $dist);
   for (my $x = 0; $x < 2; $x++) {
     $line = <IN>;
   }
@@ -111,8 +130,7 @@ foreach my $x (sort keys %len) {
     # only if variant > specified percentage $pct
     my $ratio = $len{$x}{$y} / $tot{$x};
     if ($ratio >= $pct) {
-      my @div = split("\t", $pos{$x});
-      printf OUT "$x\t$div[3]\t$y\t%.1f\n", $ratio*100;
+      printf OUT "$x\t$pos{$x}\t$y\t%.1f\n", $ratio*100;
     }
   }
 }

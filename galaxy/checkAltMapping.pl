@@ -65,7 +65,7 @@ while (my $line = <BED>) {
   chomp $line;
   my @spl = split("\t", $line);
   if (scalar @spl < 4) {
-    print "Improperly formatted line in BED file: $line\n",
+    print "Warning! Improperly formatted line in $ARGV[3]: $line\n  ",
       "Need chromName, chromStart, chromEnd, and ampliconName (tab-delimited)\n";
     next;
   }
@@ -111,15 +111,26 @@ $/ = "\n";
 while (my $line = <FQ>) {
   next if (substr($line, 0, 1) ne '@');
   chomp $line;
-  $count++;
+
+  # determine amplicon ID
   my @spl = split(" ", $line);
+  my $id = "";
+  for (my $x = 1; $x < scalar @spl; $x++) {
+    if ($spl[$x] eq "fwd" || $spl[$x] eq "rev") {
+      $id = $spl[$x-1];
+      last;
+    }
+  }
+  die "Error! $ARGV[0] is improperly formatted:\n  ",
+    "no amplicon ID in $line\n" if (!$id);
   my $que = substr($spl[0], 1);
-  die "$ARGV[0] is not properly formatted\n" if (scalar @spl < 4);
+
+  # check amplicon, and for duplicates
   foreach my $am (keys %loc) {
-    if ($spl[2] eq $am) {
+    if ($id eq $am) {
       if (exists $amp{$que}) {
-        if ($spl[2] ne $amp{$que}) {
-          print "Warning: primers do not match for read $que\n";
+        if ($id ne $amp{$que}) {
+          print "Warning! Primers do not match for read $que\n";
           delete $amp{$que};
           last;
         }
@@ -144,9 +155,10 @@ while (my $line = <FQ>) {
   }
 
   if (! exists $amp{$que}) {
-    print "Warning: skipping read $que\n";
+    print "Warning! Skipping read $que -- no amplicon found\n";
     $line = <FQ>;
   } 
+  $count++;
   for (my $x = 0; $x < 2; $x++) {
     $line = <FQ>;
   }
@@ -170,6 +182,7 @@ while ($line) {
     next;
   }
   my @spl = split("\t", $line);
+  die "Error! $ARGV[1] is improperly formatted\n" if (scalar @spl < 11);
   $count++;
   if ($spl[1] & 0x4) {
     $un++;
@@ -192,9 +205,12 @@ while ($line) {
 
   # check read mapping
   while ($line) {
+    chomp $line;
     my @div = split("\t", $line);
     last if ($div[0] ne $spl[0]);
-    die "Supp. alignment: $line\n" if ($div[1] & 0x800);
+    die "Error! $ARGV[1] is improperly formatted\n" if (scalar @div < 11);
+    die "Error! $ARGV[1] contains a supplementary alignment:\n  $line\n"
+      if ($div[1] & 0x800);
     my $rc = ($div[1] & 0x10 ? 1 : 0); # read maps to minus strand
 
     # load removed-primer info
@@ -211,7 +227,7 @@ while ($line) {
       }
     }
     if (!@pr) {
-      print "Warning: no removed-primer info for read $div[0]\n";
+      print "Warning! No removed-primer info for read $div[0]\n";
       $line = <SAM>;
       next;
     }
@@ -224,6 +240,7 @@ while ($line) {
       } elsif ($2 eq 'I') {
         $off -= $1;
       }
+      # can also throw an error for 'S' or 'H' here
     }
 
     # save 1st position after fwd primer:
@@ -238,7 +255,7 @@ while ($line) {
 
       # skip if no genomic segment loaded
       if (! exists $chr{$div[2]}) {
-        print "Warning: no sequence loaded for reference $div[2]\n";
+        print "Warning! No sequence loaded for reference $div[2]\n";
         $line = <SAM>;
         next;
       }

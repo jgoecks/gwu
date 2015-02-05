@@ -12,13 +12,15 @@ use warnings;
 sub usage {
   print q(Usage: perl getCommon.pl  <in1>  <in2>  <out1>  <out2>  <out3>  <out4>
   Required:
-    <in1>   FASTQ file #1
-    <in2>   FASTQ file #2
-    <out1>  FASTQ file with common reads from #1
-    <out2>  FASTQ file with common reads from #2
+    <in1>   Input FASTQ file #1, with primers removed and amplicon identification
+              in header (produced by removePrimer)
+    <in2>   Input FASTQ file #2, with primers removed and amplicon identification
+              in header (produced by removePrimer)
+    <out1>  Output FASTQ file with common reads from #1
+    <out2>  Output FASTQ file with common reads from #2
   Optional:
-    <out3>  FASTQ file with singleton reads (from either #1 or #2)
-    <out4>  FASTQ file with common reads that had different primers removed
+    <out3>  Output FASTQ file with singleton reads (from either #1 or #2)
+    <out4>  Output FASTQ file with common reads that had different primers removed
               (like they were derived from a PCR chimera)
 );
   exit;
@@ -27,8 +29,8 @@ sub usage {
 usage() if (scalar @ARGV < 4 || $ARGV[0] eq "-h");
 
 # open files
-open(FQ1, $ARGV[0]) || die "Cannot open\n";
-open(FQ2, $ARGV[1]) || die "Cannot open\n";
+open(FQ1, $ARGV[0]) || die "Cannot open $ARGV[0]\n";
+open(FQ2, $ARGV[1]) || die "Cannot open $ARGV[1]\n";
 open(OUT1, ">$ARGV[2]");
 open(OUT2, ">$ARGV[3]");
 open(SING, ">$ARGV[4]") if (scalar @ARGV > 4);
@@ -44,8 +46,19 @@ while (my $q = <FQ1>) {
   my $e = <FQ1>;
   my $r = <FQ1>;
   my @spl = split(" ", $q);
-  die "No primer listed for read $q\n" if (scalar @spl < 3);
-  $pr{$spl[0]} = $spl[2];
+
+  # determine amplicon ID
+  my $id = "";
+  for (my $x = 1; $x < scalar @spl; $x++) {
+    if ($spl[$x] eq "fwd" || $spl[$x] eq "rev") {
+      $id = $spl[$x-1];
+      last;
+    }
+  }
+  die "$ARGV[0] is improperly formatted:\n  ",
+    "no amplicon ID in $q\n" if (!$id);
+
+  $pr{$spl[0]} = $id;
   $seq{$spl[0]} = $q . $w . $e . $r;
   $count++;
 }
@@ -62,10 +75,21 @@ while (my $q = <FQ2>) {
   my $w = <FQ2>;
   my $e = <FQ2>;
   my $r = <FQ2>;
+
+  # determine amplicon ID
   my @spl = split(" ", $q);
-  die "No primer listed for read $q\n" if (scalar @spl < 3);
+  my $id = "";
+  for (my $x = 1; $x < scalar @spl; $x++) {
+    if ($spl[$x] eq "fwd" || $spl[$x] eq "rev") {
+      $id = $spl[$x-1];
+      last;
+    }
+  }
+  die "$ARGV[1] is improperly formatted:\n  ",
+    "no amplicon ID in $q\n" if (!$id);
+
   if (exists $pr{$spl[0]}) {
-    if ($pr{$spl[0]} eq $spl[2]) {
+    if ($pr{$spl[0]} eq $id) {
       # match -- print reads to outputs
       print OUT1 $seq{$spl[0]};
       print OUT2 "$q$w$e$r";

@@ -56,7 +56,7 @@ while (my $line = <BED>) {
   chomp $line;
   my @spl = split("\t", $line);
   if (scalar @spl < 4) {
-    print "Improperly formatted line in BED file: $line\n",
+    print "Warning! Improperly formatted line in $ARGV[2]: $line\n  ",
       "Need chromName, chromStart, chromEnd, and ampliconName (tab-delimited)\n";
     next;
   }
@@ -79,18 +79,29 @@ my %qual; # for quality scores
 while (my $line = <FQ>) {
   next if (substr($line, 0, 1) ne '@');
   chomp $line;
-  my @spl = split(" ", $line);  # $spl[0] is name, $spl[2] is amplicon
-                                # $spl[$#spl] is cig I/D
-  die "$ARGV[0] is improperly formatted\n"
-    if (scalar @spl < 5 || $spl[$#spl] !~ m/[ID]/);
+  my @spl = split(" ", $line);  # $spl[$#spl] should have cigar I/D
+
+  # determine amplicon ID
+  my $id = "";
+  for (my $x = 1; $x < scalar @spl; $x++) {
+    if ($spl[$x] eq "fwd" || $spl[$x] eq "rev") {
+      $id = $spl[$x-1];
+      last;
+    }
+  }
+  die "Error! $ARGV[0] is improperly formatted:\n  ",
+    "no amplicon ID in $line\n" if (!$id);
+  die "Error! $ARGV[0] is improperly formatted:\n  ",
+    "no in/del info in $line\n" if ($spl[$#spl] !~ m/[ID]/);
+
   my $read = substr($spl[0], 1);
   $line = <FQ>;
   chomp $line;
   my $len = length $line;
-  if (exists $seq{$spl[2]}{$len}{$line}) {
-    $seq{$spl[2]}{$len}{$line} .= ",$read";
+  if (exists $seq{$id}{$len}{$line}) {
+    $seq{$id}{$len}{$line} .= ",$read";
   } else {
-    $seq{$spl[2]}{$len}{$line} = "$spl[$#spl] $read";
+    $seq{$id}{$len}{$line} = "$spl[$#spl] $read";
     $uniq++;
   }
   $count++;
@@ -98,7 +109,7 @@ while (my $line = <FQ>) {
   # save quality scores
   $line = <FQ>;
   chomp $line;
-  $qual{substr($spl[0], 1)} = $line;
+  $qual{$read} = $line;
 }
 close FQ;
 print "Reads loaded: $count\n",
@@ -115,10 +126,10 @@ foreach my $am (sort keys %seq) {
   foreach my $len (sort keys %{$seq{$am}}) {
 
     if (! exists $loc{$am}) {
-      print "Error! No location info for $am\n";
+      print "Warning! Skipping $am -- no location info\n";
       last;
     } elsif (! exists $targ{$am}) {
-      print "Error! No sequences loaded for $am\n";
+      print "Warning! Skipping $am -- no sequences loaded\n";
       last;
     }
 
@@ -233,7 +244,8 @@ foreach my $am (sort keys %seq) {
         $gen =~ tr/a-z/A-Z/;
       }
       if (!$gen) {
-        print "Warning: cannot evaluate external in/del of $am, len=$len\n";
+        print "Warning! Cannot evaluate external in/del of $am, len=$len",
+          "  (no reference sequence loaded)\n";
       } else {
         # score match of primer to genomic segment
         $score = scoreAlign($gen, $prim);

@@ -60,7 +60,7 @@ while (my $line = <BED>) {
   chomp $line;
   my @spl = split("\t", $line);
   if (scalar @spl < 4) {
-    print "Improperly formatted line in BED file: $line\n",
+    print "Warning! Improperly formatted line in $ARGV[1]: $line\n  ",
       "Need chromName, chromStart, chromEnd, and ampliconName (tab-delimited)\n";
     next;
   }
@@ -93,16 +93,27 @@ $/ = "\n";
 while (my $line = <FQ>) {
   next if (substr($line, 0, 1) ne '@');
   chomp $line;
-  $count++;
+
+  # determine amplicon ID
   my @spl = split(" ", $line);
+  my $id = "";
+  for (my $x = 1; $x < scalar @spl; $x++) {
+    if ($spl[$x] eq "fwd" || $spl[$x] eq "rev") {
+      $id = $spl[$x-1];
+      last;
+    }
+  }
+  die "Error! $ARGV[0] is improperly formatted:\n  ",
+    "no amplicon ID in $line\n" if (!$id);
   my $que = substr($spl[0], 1);
-  die "$ARGV[0] is not properly formatted\n" if (scalar @spl < 4);
+
+  # check amplicon, and for duplicates
   foreach my $am (keys %loc) {
-    if ($spl[2] eq $am) {
+    if ($id eq $am) {
       if (exists $amp{$que}) {
         my @div = split("\t", $amp{$que});
-        if ($spl[2] ne $div[0]) {
-          print "Warning: primers do not match for read $que\n";
+        if ($id ne $div[0]) {
+          print "Warning! Primers do not match for read $que\n";
           delete $amp{$que};
           last;
         }
@@ -121,9 +132,10 @@ while (my $line = <FQ>) {
   }
 
   if (! exists $amp{$que}) {
-    print "Warning: skipping read $que\n";
+    print "Warning! Skipping read $que -- no amplicon found\n";
     $line = <FQ>;
   } 
+  $count++;
   for (my $x = 0; $x < 2; $x++) {
     $line = <FQ>;
   }
@@ -141,7 +153,7 @@ while (my $line = <ALT>) {
   chomp $line;
   my @spl = split("\t", $line);
   my $res = pop @spl;
-  die "$ARGV[2] is not properly formatted\n"
+  die "Error! $ARGV[2] is improperly formatted\n"
     if (scalar @spl < 5 || (($res != 0) && ($res != 1))); 
   my @div = split('-', $spl[$#spl]);
   for (my $x = $div[0]; $x < $div[$#div]+1; $x++) {
@@ -161,6 +173,7 @@ if (scalar @ARGV > 5) {
     next if (substr($line, 0, 1) eq '#');
     $total++;
     my @spl = split("\t", $line);
+    die "Error! $ARGV[5] is improperly formatted\n" if (scalar @spl < 10);
     $tot{"$spl[1] $spl[3]"}++;
     if (($spl[$#spl-1] eq "external") && ($spl[$#spl] > $maxExt)) {
       $xExt{"$spl[1] $spl[3]"}++;  # external artifact
@@ -199,6 +212,7 @@ while ($line) {
   }
   chomp $line;
   my @spl = split("\t", $line);
+  die "Error! $ARGV[3] is improperly formatted\n" if (scalar @spl < 11);
   $count++;
 
   # prepare to check mapping(s)
@@ -232,7 +246,9 @@ while ($line) {
       chomp $line;
       my @div = split("\t", $line);
       last if ($div[0] ne $spl[0]);
-      die "Supp. alignment: $line\n" if ($div[1] & 0x800);
+      die "Error! $ARGV[3] is improperly formatted\n" if (scalar @div < 11);
+      die "Error! $ARGV[3] contains a supplementary alignment:\n  $line\n"
+        if ($div[1] & 0x800);
       my $xs = getTag("AS", @div);
 
       # get location, accounting for in/dels
@@ -243,6 +259,7 @@ while ($line) {
         } elsif ($2 eq 'I') {
           $off -= $1;
         }
+        # can also throw an error for 'S' or 'H' here
       }
       # save 1st position after fwd primer:
       my $rc = ($div[1] & 0x10 ? 1 : 0);  # read maps to minus strand
@@ -270,7 +287,7 @@ while ($line) {
           $pr = $amp{$div[0]};
         }
         if (!$pr) {
-          print "Warning: no removed-primer info for read $div[0]\n";
+          print "Warning! No removed-primer info for read $div[0]\n";
           #push @res, $line;  # save mapping(?)
           $line = <SAM>;
           next;
@@ -279,7 +296,7 @@ while ($line) {
         # check alternative location
         my $lc = ($rc ? '-' : '+')."\t$div[2]\t$pos"; # 2nd key to %alt
         if ((! exists $alt{$pr}) || (! exists $alt{$pr}{$lc})) {
-          print "Warning: no alt. location info for read $div[0], $pr\t$lc\n";
+          print "Warning! No alt. location info for read $div[0], $pr\t$lc\n";
           #push @res, $line;  # save mapping(?)
           $line = <SAM>;
           next;
@@ -305,7 +322,7 @@ while ($line) {
       # construct new SAM record
       my $mapq = 255;       # mapping quality (255 = "unavailable")
       my $xm = $div[1];     # number of subs
-      my $as = -5*$xm - 1 ; # for AS, count subs as -5 each, in/del as -1 only
+      my $as = -5*$xm - 1;  # for AS, count subs as -5 each, in/del as -1 only
       my $rec = "$spl[0]\t0\t$div[3]\t$div[4]\t$mapq\t$div[5]".
         "\t*\t0\t0\t$div[6]\t$div[7]\tAS:i:$as";
       $div[2] =~ m/^(\d+)([ID])/;
@@ -457,7 +474,7 @@ sub getTag {
     }
   }
   if ($ret == 1000) {
-    print "Error: cannot find $tag in SAM record:\n",
+    print "Error! Cannot find $tag in SAM record:\n",
       join("\t", @spl), "\n";
     die;
   }
