@@ -448,9 +448,9 @@ if (scalar @ARGV > 6) {
 print "Reads analyzed: $count\n",
   "  (Previously unmapped: $un)\n",
   "Post-filtering unmapped: $ct\n",
-  "Post-filtering mapped: $mapped\n",
-  "Total realignments: $real\n",
-  "  Primary maps: $pral\n";
+  "Post-filtering mapped: $mapped\n";
+print "Total realignments: $real\n",
+  "  Primary maps: $pral\n" if (scalar @ARGV > 5);
 
 # reverse-complement a sequence
 sub revComp {
