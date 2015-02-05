@@ -14,20 +14,20 @@ idx=            # bowtie2 indexes (will be generated if necessary)
 dir=.           # output directory
 
 # check input files
-if test ! -f $file1 || test ! -f $file2; then
+if [[ ! -f $file1 || ! -f $file2 ]]; then
   echo "Input FASTQ files not found"
-  exit
-elif test ! -f $bed; then
-  echo "Input primer BED file $bed not found"
-  exit
-elif test ! -f $gen; then
-  echo "Input reference genome $gen not found"
-  exit
+  exit -1
+elif [ ! -f $bed ]; then
+  echo "Input primer BED file not found"
+  exit -1
+elif [ ! -f $gen ]; then
+  echo "Input reference genome not found"
+  exit -1
 fi
 
 # retrieve primer-target sequences
 prim=primers.txt
-if test ! -f $prim; then
+if [ ! -f $prim ]; then
   perl getPrimers.pl $bed $gen $prim
 fi
 
@@ -92,13 +92,13 @@ cat $out1 $out2 > $tr15
 # quality trim
 echo "Quality filtering"
 out3=comb.fastq
-qtParam="-t 30"  # min. avg. qual. of 30; no window filtering
+qtParam="-t 30 -n 20"  # min. avg. qual. of 30; min. len. 20; no window filtering
 qualTrim -i $tr15 -o $out3 $qtParam
 
 # check for bowtie2 indexes
-if test ! -f $idx.1.bt2 || test ! -f $idx.2.bt2 ||
-   test ! -f $idx.3.bt2 || test ! -f $idx.4.bt2 ||
-   test ! -f $idx.rev.1.bt2 || test ! -f $idx.rev.2.bt2; then
+if [[ ! -f $idx.1.bt2 || ! -f $idx.2.bt2 ||
+    ! -f $idx.3.bt2 || ! -f $idx.4.bt2 ||
+    ! -f $idx.rev.1.bt2 || ! -f $idx.rev.2.bt2 ]]; then
   echo "Building bowtie2 indexes"
   bowtie2-build $gen $idx
 fi
@@ -118,21 +118,21 @@ len2=len2.fastq
 perl getLengthVars.pl $out1 $len1 $len2
 len3=len3.txt
 len3v=len3v.txt
-perl alignLengthVars8.pl $len2 $prim $bed $len3 $len3v $gen
+perl alignLengthVars.pl $len2 $prim $bed $len3 $len3v $gen
 
 # check alternative mapping sites
 out5=altMapping.txt
 log4=altMapping.log
-if test ! -f $out5; then
+if [ ! -f $out5 ]; then
   echo "Checking alternative mapping sites"
-  perl checkAltMapping4.pl $out3 $out4 $prim $bed $gen $out5 $log4
+  perl checkAltMapping.pl $out3 $out4 $prim $bed $gen $out5 $log4
 fi
 
 # filter SAM -- multi-mapping and realignment of length variants
 echo "Filtering SAM"
 out6=combFil.sam
 log5=realign.log
-perl filterSAM3.pl $out3 $bed $out5 $out4 $out6 $len3 $log5
+perl filterSAM.pl $out3 $bed $out5 $out4 $out6 $len3 $log5
 
 # convert SAM to sorted BAM
 echo "Converting SAM to sorted BAM"
@@ -144,18 +144,27 @@ samtools sort $tr16 combsort
 # call variants
 echo "Calling variants"
 tr17=temp.vcf
-fbParam="-K -F 0.01 -m 0"
+fbParam="-K -F 0.01 -m 0 -q 30"
 freebayes $fbParam -f $gen $out7 -v $tr17";
+tr18=temp2.vcf
+vcfbreakmulti $tr17 > $tr18
+
+# filter variants by region
+tr19=temp3.vcf
+perl filterVCF.pl $tr18 $bed $tr19
+
+# filter variants by proximity to homopolymers
 out8=varFil.vcf
-perl filterVCF2.pl $tr17 $bed $out8
+log6=varFil.log
+perl filterVars.pl $tr19 $gen $out8 $log6
 
 # remove extra files
-rm $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 \
-  $tr10 $tr11 $tr12 $tr13 $tr14 $tr15 $tr16 $tr17
+rm $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
+  $tr11 $tr12 $tr13 $tr14 $tr15 $tr16 $tr17 $tr18 $tr19
 
 # move files to output directory
-if test ! -d $dir; then
+if [ ! -d $dir ]; then
   mkdir $dir
 fi
 mv $out1 $out2 $out3 $out4 $out5 $out6 $out7 $out8 \
-  $log1 $log2 $log3 $log4 $log5 $len1 $len2 $len3 $len3v $dir
+  $log1 $log2 $log3 $log4 $log5 $log6 $len1 $len2 $len3 $len3v $dir
