@@ -27,8 +27,8 @@ For example, given the following C -> T variant::
 The variant base, T, is adjacent to a homopolymer of three Ts, so the new VCF
 record will have "HP=3" in it.
 
-Note that the variant base must match the homopolymer. That is, if the above
-variant had been C -> G, the result would have been "HP=0".
+Note that, except for deletions, the variant base must match the homopolymer. 
+That is, if the above variant had been C -> G, the result would have been "HP=0".
 
 Complex variants containing nonmatching variant bases are not evaluated, and
 are given the default "HP=0".
