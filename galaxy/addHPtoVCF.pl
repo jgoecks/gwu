@@ -74,7 +74,8 @@ while (my $line = <VCF>) {
   my $alt = '*';
   my $prev = "";
   my $base = "";  # different nt
-  my $flag = 0;
+  my $flag = 0;   # 1 if complex variant
+  my $del = "";   # deleted bases if variant is a deletion
   while ($cig =~ m/(\d+)([IDMX])/g) {
     if ($2 ne 'M') {
       if ($prev) {
@@ -88,13 +89,19 @@ while (my $line = <VCF>) {
           if ($base) {
             $flag = 1 if ($base ne substr($spl[3], $pos+$x, 1));
           } else {
-            $base = substr($spl[3], $pos+$x, 1);
+            $del .= substr($spl[3], $pos+$x, 1);
           }
           $alt .= substr($spl[3], $pos+$x, 1);
         } else {
           if ($base) {
             $flag = 1 if ($base ne substr($spl[4], $sub+$x, 1));
           } else {
+            for (my $y = 0; $y < length $del; $y++) {
+              if (substr($spl[4], $sub+$x, 1) ne substr($del, $y, 1)) {
+                $flag = 1;  # complex variant, base does not match del
+                last;
+              }
+            }
             $base = substr($spl[4], $sub+$x, 1);
           }
           $alt .= substr($spl[4], $sub+$x, 1) if ($2 ne 'I');
@@ -121,7 +128,9 @@ while (my $line = <VCF>) {
 
   my $hit = 0;
   if ($flag) {
-    print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]\t$ab\t$cig\tnot checked\n";
+    # complex variant
+    print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]",
+      "\t$ab\t$cig\tnot checked\n";
   } else {
 
     # if not already loaded, get chromosome from genome
@@ -159,17 +168,35 @@ while (my $line = <VCF>) {
     $seg1 =~ tr/a-z/A-Z/;
     $seg2 =~ tr/a-z/A-Z/;
 
-    $seg1 =~ m/($base*)$/;
-    $hit += length $1;
-    $seg2 =~ m/^($base*)/;
-    $hit += length $1;
-    print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]\t$ab\t$cig\t$seg1 $alt $seg2\t$hit";
+    # add homopolymer lengths
+    if ($del) {
+      # for deletion, do not need to match $base
+      $seg1 =~ m/((.)\2*)$/;
+      $hit = length $1;
+      $seg2 =~ m/^($2*)/;
+      $hit += length $1;
+
+      # check other side
+      $seg2 =~ m/^((.)\2*)/;
+      my $hit2 = length $1;
+      $seg1 =~ m/($2*)$/;
+      $hit2 += length $1;
+
+      $hit = $hit2 if ($hit2 > $hit);  # save maximum
+
+    } else {
+      $seg1 =~ m/($base*)$/;
+      $hit = length $1;
+      $seg2 =~ m/^($base*)/;
+      $hit += length $1;
+    }
+    print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]\t$ab",
+      "\t$cig\t$seg1 $alt $seg2\t$hit\n";
   }
 
   $spl[7] =~ s/AB\=(.*?)\;/AB\=$ab\;/;
   $spl[7] =~ s/\;LEN/\;HP=$hit\;LEN/;
   print OUT join("\t", @spl), "\n";
-  print LOG "\n";
 
 }
 close GEN;
