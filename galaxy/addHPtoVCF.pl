@@ -15,7 +15,7 @@ sub usage {
   Required:
     <infile>   Input VCF file listing variants, freebayes-style
     <genome>   Fasta file of reference genome
-    <outfile>  Output VCF file listing good variants
+    <outfile>  Output VCF file
     <logfile>  Verbose log file
 );
   exit;
