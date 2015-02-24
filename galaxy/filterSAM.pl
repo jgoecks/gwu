@@ -316,7 +316,10 @@ while ($line) {
 
     my @div = split("\t", $aln{$spl[0]});
     my $seq = ($spl[1] & 0x10 ? revComp($spl[9]) : $spl[9]);
-    if ($div[6] eq $seq) {
+
+    # check sequence -- allow 1bp diff in case of external in/del
+    if ($div[6] eq $seq || substr($div[6], 1) eq $seq ||
+        substr($div[6], 0, -1) eq $seq) {
       delete $aln{$spl[0]};
 
       # construct new SAM record
@@ -388,6 +391,9 @@ while ($line) {
         $real++;
         $pral++ if (!$x);
       }
+    } else {
+      print "Warning! Cannot consider realignment for read $spl[0]\n",
+        "Sequences do not match:\n$div[6]\n$seq\n";
     }
   }
 
