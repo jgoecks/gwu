@@ -82,7 +82,6 @@ while (my $line = <VCF>) {
         $alt .= " $prev *";
         $prev = "";
       }
-      my $diff = "";
       for (my $x = 0; $x < $1; $x++) {
         push @loc, $spl[1] + $pos + $x;
         if ($2 eq 'D') {
@@ -113,6 +112,7 @@ while (my $line = <VCF>) {
         $prev = substr($spl[3], $pos, $1);
       }
       if ($base && length $' != 0) {
+        # matching bases in complex variant must match variant bases
         for (my $x = 0; $x < $1; $x++) {
           $flag = 1 if ($base ne substr($spl[4], $sub+$x, 1));
         }
