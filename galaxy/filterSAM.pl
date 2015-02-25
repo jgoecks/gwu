@@ -267,9 +267,11 @@ while ($line) {
 
       # mapped to correct location?
       if (($div[2] eq $cut[0]) && ($pos > $cut[1]) && ($pos < $cut[2])) {
-        push @res, $line;          # save correct mapping
-        $idx = $#res;              # save index
-        $map = 1 if ($xs == $as);  # equivalent to primary
+        push @res, $line;            # save correct mapping
+        if ($idx == -1) {
+          $idx = $#res;              # save index (if not already saved)
+          $map = 1 if ($xs == $as);  # equivalent to primary
+        }
       } else {
         # not mapped to correct location: determine if it is legit
 
