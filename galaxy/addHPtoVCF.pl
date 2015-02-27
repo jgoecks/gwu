@@ -76,6 +76,7 @@ while (my $line = <VCF>) {
   my $base = "";  # different nt
   my $flag = 0;   # 1 if complex variant
   my $del = "";   # deleted bases if variant is a deletion
+  my $hit = 0;    # length of homopolymer
   while ($cig =~ m/(\d+)([IDMX])/g) {
     if ($2 ne 'M') {
       if ($prev) {
@@ -115,6 +116,7 @@ while (my $line = <VCF>) {
         # matching bases in complex variant must match variant bases
         for (my $x = 0; $x < $1; $x++) {
           $flag = 1 if ($base ne substr($spl[4], $sub+$x, 1));
+          $hit++;  # add to homopolymer length
         }
       }
     }
@@ -126,11 +128,11 @@ while (my $line = <VCF>) {
     die "No variant position in $line\n";
   }
 
-  my $hit = 0;
   if ($flag) {
     # complex variant
     print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]",
       "\t$ab\t$cig\tnot checked\n";
+    $hit = 0;
   } else {
 
     # if not already loaded, get chromosome from genome
@@ -172,9 +174,9 @@ while (my $line = <VCF>) {
     if ($del) {
       # for deletion, do not need to match $base
       $seg1 =~ m/((.)\2*)$/;
-      $hit = length $1;
+      my $hit1 = length $1;
       $seg2 =~ m/^($2*)/;
-      $hit += length $1;
+      $hit1 += length $1;
 
       # check other side
       $seg2 =~ m/^((.)\2*)/;
@@ -182,11 +184,11 @@ while (my $line = <VCF>) {
       $seg1 =~ m/($2*)$/;
       $hit2 += length $1;
 
-      $hit = $hit2 if ($hit2 > $hit);  # save maximum
+      $hit += ($hit2 > $hit1 ? $hit2 : $hit1);  # save maximum
 
     } else {
       $seg1 =~ m/($base*)$/;
-      $hit = length $1;
+      $hit += length $1;
       $seg2 =~ m/^($base*)/;
       $hit += length $1;
     }
