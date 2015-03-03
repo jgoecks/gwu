@@ -37,10 +37,12 @@ print LOG "#CHROM\tPOS\tREF\tALT\tCIGAR\tGenomeSeg\n";
 my $chr = "";
 my $seq = "";
 my $rem = 0; my $kept = 0;
-my $pr = 1;
+my $pr = 0;
 while (my $line = <VCF>) {
   if (substr($line, 0, 1) eq '#') {
-    if ($pr && substr($line, 1, 7) eq '#FORMAT') {
+    if (substr($line, 0, 6) eq '##INFO') {
+      $pr = 1;
+    } elsif ($pr) {
       print OUT "##INFO=<ID=HP,Number=1,Type=Integer,",
         "Description=\"Length of adjacent homopolymer that matches variant\">\n";
       $pr = 0;
@@ -197,7 +199,7 @@ while (my $line = <VCF>) {
   }
 
   $spl[7] =~ s/AB\=(.*?)\;/AB\=$ab\;/;
-  $spl[7] =~ s/\;LEN/\;HP=$hit\;LEN/;
+  $spl[7] .= ";HP=$hit";
   print OUT join("\t", @spl), "\n";
 
 }
