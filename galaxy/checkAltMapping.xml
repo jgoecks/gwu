@@ -15,7 +15,7 @@
       <options from_data_table="all_fasta"/>
     </param>
     <param name="pct" type="float" value="0.75" min="0" max="1" label="Primer match score threshhold (0-1)" help="Primer scores of at least this value will be considered a match. See &quot;Primer matching score&quot; below for more information."/>
-    <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like a verbose output log file" help="By default, one output file (listing mapping judgments) is produced."/>
+    <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like a verbose output log file?" help="By default, one output file (listing mapping judgments) is produced."/>
   </inputs>
   <outputs>
     <data format="tabular" name="out" label="${tool.name} on ${on_string}: mapping judgments"/>

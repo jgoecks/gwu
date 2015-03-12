@@ -16,12 +16,13 @@ sub usage {
     <infile>   Input VCF file listing variants, freebayes-style
     <genome>   Fasta file of reference genome
     <outfile>  Output VCF file
+  Optional:
     <logfile>  Verbose log file
 );
   exit;
 }
 
-usage() if (scalar @ARGV < 4 || $ARGV[0] eq "-h");
+usage() if (scalar @ARGV < 3 || $ARGV[0] eq "-h");
 
 # open files
 open(VCF, $ARGV[0]) || die "Cannot open $ARGV[0]\n";
@@ -30,13 +31,14 @@ $/ = '>';
 my $waste = <GEN>;
 $/ = "\n";
 open(OUT, ">$ARGV[2]");
-open(LOG, ">$ARGV[3]");
-print LOG "#CHROM\tPOS\tREF\tALT\tCIGAR\tGenomeSeg\n";
+if (scalar @ARGV > 3) {
+  open(LOG, ">$ARGV[3]");
+  print LOG "#CHROM\tPOS\tREF\tALT\tAB\tCIGAR\tGenomeSegment\tHP\n";
+}
 
-# start analyzing VCF file
+# analyze VCF file
 my $chr = "";
 my $seq = "";
-my $rem = 0; my $kept = 0;
 my $pr = 0;
 while (my $line = <VCF>) {
   if (substr($line, 0, 1) eq '#') {
@@ -58,10 +60,24 @@ while (my $line = <VCF>) {
     die "No AB found in $line\n";
   }
   my $ab = $1;
+
+  # skip if multiple alleles on one line
+  my @brk = split(',', $ab);
+  if (scalar @brk > 1) {
+    print "Warning! Multiple variant alleles in $line\n";
+    print OUT "$line\n";
+    next;
+  }
+
+  # calculate abundance if given as 0
   if ($ab == 0) {
-    $spl[7] =~ m/AO\=(.*?)\;/;
+    if ($spl[7] !~ m/AO\=(.*?)\;/) {
+      die "No AO found in $line\n";
+    }
     my $ct = $1;
-    $spl[7] =~ m/DP\=(.*?)\;/;
+    if ($spl[7] !~ m/DP\=(.*?)\;/) {
+      die "No DP found in $line\n";
+    }
     $ab = $ct / $1;
     $ab = int(10000000*$ab+0.5)/10000000;
   }
@@ -133,7 +149,7 @@ while (my $line = <VCF>) {
   if ($flag) {
     # complex variant
     print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]",
-      "\t$ab\t$cig\tnot checked\n";
+      "\t$ab\t$cig\tnot checked\n" if (scalar @ARGV > 3);
     $hit = 0;
   } else {
 
@@ -195,7 +211,7 @@ while (my $line = <VCF>) {
       $hit += length $1;
     }
     print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]\t$ab",
-      "\t$cig\t$seg1 $alt $seg2\t$hit\n";
+      "\t$cig\t$seg1 $alt $seg2\t$hit\n" if (scalar @ARGV > 3);
   }
 
   $spl[7] =~ s/AB\=(.*?)\;/AB\=$ab\;/;
@@ -206,4 +222,4 @@ while (my $line = <VCF>) {
 close GEN;
 close VCF;
 close OUT;
-close LOG;
+close LOG if (scalar @ARGV > 3);

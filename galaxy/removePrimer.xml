@@ -32,7 +32,7 @@
   <inputs>
     <param format="fastq,fasta" name="in" type="data" label="File containing query reads" help="FASTA or FASTQ format"/>
     <param format="tabular" name="prim" type="data" label="File listing primer sequences" help="See &quot;Primer file&quot; section below for formatting information."/>
-    <param name="require" type="boolean" truevalue="-rq" falsevalue="" checked="false" label="Check if you would like to require that both primers be found" help="By default, only one primer match (at the beginning of the read) is required for a read to be processed."/>
+    <param name="require" type="boolean" truevalue="-rq" falsevalue="" checked="false" label="Would you like to require that both primers be found?" help="By default, only one primer match (at the beginning of the read) is required for a read to be processed."/>
 
     <conditional name="output">
       <param name="output_selector" type="select" label="Would you like to choose additional output files?" help="By default, one output file (listing reads with primers removed) is produced.">
@@ -40,9 +40,9 @@
         <option value="yes">Yes</option>
       </param>
       <when value="yes">
-        <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like an output log file"/>
-        <param name="nonmatch_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like an output file listing reads that failed primer matching"/>
-        <param name="correct_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like an output file listing reads with correct primers reattached" help="Should be selected only if requiring both primers be removed."/>
+        <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like an output log file?"/>
+        <param name="nonmatch_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like an output file listing reads that failed primer matching?"/>
+        <param name="correct_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like an output file listing reads with correct primers reattached?" help="Should be selected only if requiring both primers be removed."/>
       </when>
       <when value="no"/>
     </conditional>
@@ -284,7 +284,7 @@ the terms are used for this tool.
   **forward / reverse:** An amplicon consists of a forward primer, a reverse
   primer, and an intervening target region. The terms *forward* and *reverse*
   refer to the relative positions on the chromosome or genome, with the forward
-  primer being closer to base number 1. Also, the forward primer is 5' to 3'
+  primer being closer to base number 1. So the forward primer is 5' to 3'
   on the plus strand, and the reverse primer is 5' to 3' on the minus strand.
 
 A read derived from the sequencing of a PCR product should contain one (or

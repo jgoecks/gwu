@@ -16,7 +16,7 @@
     <param format="fastq" name="fastq" type="data" label="Length-variant reads" help="Output from the tool &quot;Get length-variant reads&quot;"/>
     <param format="csv" name="prim" type="data" label="File listing primer and target sequences" help="See &quot;Primer and target file&quot; section below for format."/>
     <param format="bed" name="bed" type="data" label="File listing primer locations"/>
-    <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Check if you would like a verbose output log file" help="By default, one output file (listing realignment information for each length-variant read) is produced."/>
+    <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like a verbose output log file?" help="By default, one output file (listing realignment information for each length-variant read) is produced."/>
 
     <conditional name="genome">
       <param name="genome_opt" type="select" label="Would you like to specify a reference genome?" help="Used to evaluate external insertions (see &quot;External in/dels&quot; section below for more information).">

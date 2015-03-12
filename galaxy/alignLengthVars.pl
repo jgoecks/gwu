@@ -4,6 +4,8 @@
 # Nov. 2014
 
 # Align length variants to genomic segments.
+# Version 2: adding one base of the primer for reads
+#   with external in/dels.
 
 use strict;
 use warnings;
@@ -211,6 +213,7 @@ foreach my $am (sort keys %seq) {
     if (!$firstM) {
       my $three = ($best =~ m/\D0M$/ ? 1 : 0);  # in/del at 3' end
       my $prim = ($three ? reverse $rev{$am} : $fwd{$am});  # primer sequence
+      my $base = substr($prim, -1);  # 3' base of primer
       my $gen = "";  # genomic sequence
       if ($best =~ m/D/) {
         if ($three) {
@@ -251,6 +254,36 @@ foreach my $am (sort keys %seq) {
         $score = scoreAlign($gen, $prim);
         printf LOG "\texternal\t%.3f\n", $score if (scalar @ARGV > 4);
       }
+
+      # adjust $best to include one base of primer
+      if ($three) {
+        substr($best, -2) = "1M"; # =~ s/0M\$/1M\$/;
+      } else {
+        substr($best, 0, 2) = "1M"; #$best =~ s/0M/1M/;
+      }
+
+      # produce output -- info for a SAM record
+      while (my $max = findMax(%rep)) {
+        my @que = split(" ", $max); # $que[0] is sequence, $que[1] is read count
+        my @cut = split(" ", $rep{$que[0]}); # $cut[0] has in/del length
+        my @spl = split(",", $cut[1]); # list of reads
+        my $seq1 = ($three ? $que[0].$base : $base.$que[0]);
+        my $seq2 = ($three ? $targ{$am}.$base : $base.$targ{$am});
+        my ($md0, $md1) = getMD($seq1, $seq2, $best);
+        my @lc = split("\t", $loc{$am});
+        for (my $x = 0; $x < scalar @spl; $x++) {
+          print OUT "$spl[$x]\t$am\t$md1\t$cut[0]\t$lc[0]\t",
+            ($three ? $lc[1] : $lc[1]-1),
+            "\t$best\t$seq1\t",
+            ($three ? "$qual{$spl[$x]}I" : "I$qual{$spl[$x]}"),
+            "\t$md0";
+          printf OUT "\texternal\t%.3f", $score if ($score != -1);
+          print OUT "\n";
+        }
+        delete $rep{$que[0]};
+      }
+
+      next;
     }
 
     # produce output -- info for a SAM record

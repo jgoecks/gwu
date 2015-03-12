@@ -1,0 +1,22 @@
+<tool id="makevcf" name="Construct a VCF">
+  <description> using outputs from VarScan</description>
+  <command interpreter="perl">
+    makeVCF.pl $snp $ind $pil $out $qual
+  </command>
+  <inputs>
+    <param format="tabular" name="snp" type="data" label="Output from VarScan pileup2snp"/>
+    <param format="tabular" name="ind" type="data" label="Output from VarScan pileup2indel"/>
+    <param format="pileup" name="pil" type="data" label="Pileup file used with VarScan"/>
+    <param name="qual" type="integer" value="15" min="0" label="Minimum quality score used with VarScan" help="--min-avg-qual parameter"/>
+  </inputs>
+  <outputs>
+    <data format="vcf" name="out" label="${tool.name} on ${on_string}"/>
+  </outputs>
+
+  <help>
+This tool constructs a single VCF from the outputs of the VarScan commands
+"pileup2snp" and "pileup2indel".
+
+  </help>
+
+</tool>
