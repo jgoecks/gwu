@@ -9,7 +9,7 @@ use strict;
 use warnings;
 
 sub usage {
-  print q(Usage: perl makeVCF.pl  <infile1>  <infile2>  <infile3>  <outfile>  <minQual>
+  print q(Usage: perl makeVCF.pl  <infile1>  <infile2>  <infile3>  <outfile>  <minQual>  <label>
   Required:
     <infile1>  Output from VarScan pileup2snp
     <infile2>  Output from VarScan pileup2indel
@@ -18,6 +18,8 @@ sub usage {
   Optional:
     <minQual>  Minimum quality score used with VarScan
                  ('--min-avg-qual' parameter; def. 15)
+    <label>    Sample name to add to header line
+                 (def. <outfile>)
 );
   exit;
 }
@@ -29,9 +31,15 @@ open(SNP, $ARGV[0]) || die "Cannot open $ARGV[0]\n";
 open(IND, $ARGV[1]) || die "Cannot open $ARGV[1]\n";
 open(PIL, $ARGV[2]) || die "Cannot open $ARGV[2]\n";
 open(OUT, ">$ARGV[3]");
+
+# minimum quality score
 my $minQual = 15;
 $minQual = $ARGV[4] if (scalar @ARGV > 4);
 my $min = $minQual + 32;  # converted to ASCII
+
+# sample name
+my $samp = $ARGV[3];      
+$samp = $ARGV[5] if (scalar @ARGV > 5);
 
 # print header of VCF file
 print OUT q(##fileformat=VCFv4.2
@@ -41,8 +49,10 @@ print OUT q(##fileformat=VCFv4.2
 ##INFO=<ID=RO,Number=1,Type=Integer,Description="Reference allele observations">
 ##INFO=<ID=DP,Number=1,Type=Integer,Description="Read depth (max. over reference positions)">
 ##INFO=<ID=CIGAR,Number=1,Type=String,Description="CIGAR representation of the alternate allele">
+##INFO=<ID=TYPE,Number=1,Type=String,Description="Type of alternate allele (snp, ins, or del)">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 );
-print OUT "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\n";
+print OUT "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t$samp\n";
 
 # save read depth at each position
 my %dp;
@@ -76,6 +86,9 @@ if ($sline) {
 } else {
   $sline = "chr99\t999999999";
 }
+
+# constant genotype for each alt. allele
+my $gt = "0/1";
 
 # print sorted output
 while (1) {
@@ -118,14 +131,17 @@ while (1) {
     my $ref = "";
     my $alt = "";
     my $cig = "1M";
+    my $type = "";
     if ($del eq '-') {
       $ref = $iar[2] . substr($var, 1);
       $alt = $iar[2];
-      $cig .= (-1 + length $var) . 'D'; 
+      $cig .= (-1 + length $var) . 'D';
+      $type = "del"; 
     } else {
       $ref = $iar[2];
       $alt = $iar[2] . substr($var, 1);
-      $cig .= (-1 + length $var) . 'I'; 
+      $cig .= (-1 + length $var) . 'I';
+      $type = "ins"; 
     }
 
     my $ao = $iar[5];
@@ -142,7 +158,8 @@ while (1) {
     # print output
     my $af = int(10000000*$ao/$dep+0.5) / 10000000;
     print OUT "$iar[0]\t$iar[1]\t.\t$ref\t$alt\t0\t.\t",
-      "AB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro\n";
+      "AB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=$type",
+      "\tGT\t$gt\n";
 
     # load next
     $iline = <IND>;
@@ -163,7 +180,8 @@ while (1) {
     my $af = int(10000000*$ao/$dep+0.5) / 10000000;
     my $cig = "1X";
     print OUT "$sar[0]\t$sar[1]\t.\t$ref\t$alt\t0\t.\t",
-      "AB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro\n";
+      "AB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=snp",
+      "\tGT\t$gt\n";
 
     # load next
     $sline = <SNP>;
