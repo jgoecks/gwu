@@ -1,13 +1,13 @@
 <tool id="addhptovcf" name="Add HP info field">
   <description> to VCF, giving length of adjacent homopolymer</description>
   <command interpreter="perl">
-    addHPtoVCF.pl $vcf $gen $out
+    addHPtoVCF.pl $vcf ${gen.fields.path} $out
     #if str($log_opt) == "true":
       $log
     #end if
   </command>
   <inputs>
-    <param format="vcf" name="vcf" type="data" label="Variants file" help="Should be of the format produced by freebayes, with info fields AB, AO, CIGAR, and DP. Should list one variant per line."/>
+    <param format="vcf" name="vcf" type="data" label="Variants file" help="Should be of the format produced by freebayes, with info fields &quot;AB&quot;, &quot;AO&quot;, &quot;CIGAR&quot;, and &quot;DP&quot;. Should list one variant per line."/>
     <param format="fasta" name="gen" type="select" label="Reference genome">
       <options from_data_table="all_fasta"/>
     </param>

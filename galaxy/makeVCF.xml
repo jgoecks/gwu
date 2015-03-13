@@ -7,7 +7,7 @@
     <param format="tabular" name="snp" type="data" label="Output from VarScan pileup2snp"/>
     <param format="tabular" name="ind" type="data" label="Output from VarScan pileup2indel"/>
     <param format="pileup" name="pil" type="data" label="Pileup file used with VarScan"/>
-    <param name="qual" type="integer" value="15" min="0" label="Minimum quality score used with VarScan" help="--min-avg-qual parameter"/>
+    <param name="qual" type="integer" value="15" min="0" label="Minimum quality score used with VarScan"/>
   </inputs>
   <outputs>
     <data format="vcf" name="out" label="${tool.name} on ${on_string}"/>

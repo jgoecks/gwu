@@ -4,7 +4,7 @@
     filterVCF.pl $vcf $bed $out
   </command>
   <inputs>
-    <param format="vcf" name="vcf" type="data" label="Variants file" help="Should be of the format produced by freebayes"/>
+    <param format="vcf" name="vcf" type="data" label="Variants file" help="Should be of the format produced by freebayes, with info field &quot;CIGAR&quot;"/>
     <param format="bed" name="bed" type="data" label="File listing primer locations"/>
   </inputs>
   <outputs>

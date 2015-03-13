@@ -1,7 +1,7 @@
 <tool id="checkaltmapping" name="Check alternative mappings">
   <description> of reads that map to locations other than expected</description>
   <command interpreter="perl">
-    checkAltMapping.pl $fastq $sam $prim $bed $gen $out $pct
+    checkAltMapping.pl $fastq $sam $prim $bed ${gen.fields.path} $out $pct
     #if str($log_opt) == "true":
       $log
     #end if

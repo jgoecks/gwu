@@ -9,7 +9,7 @@
       #if str($log_opt) == "false":
         None
       #end if
-      ${genome.gen}
+      ${genome.gen.fields.path}
     #end if
   </command>
   <inputs>
