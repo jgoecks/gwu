@@ -70,7 +70,7 @@ This tool uses the alignment output from the tool *Align length-variant reads*.
 It begins by throwing out some realignments -- external in/del artifacts (see
 *External in/dels* below), and those that have too many substitutions
 (this evaluation is based on Bowtie2's default end-to-end alignment score
-threshhold [-0.6*length - 0.6] and is not parameterized -- cf. lines 171-180 of
+threshhold [-0.6*length - 0.6] and is not parameterized -- cf. lines 183-192 of
 filterSAM.pl).
 
 Each remaining realignment, if not identical to the corresponding read mapping
