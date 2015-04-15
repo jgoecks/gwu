@@ -223,15 +223,20 @@ while ($line) {
   if ($spl[1] & 0x4) {
     # unmapped: check only for new alignment
     $un++;
-    $line = <SAM>;
+    while ($line = <SAM>) {
+      my @div = split("\t", $line);
+      last if (scalar @div < 11 || $div[0] ne $spl[0] ||
+        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
+    }
   } elsif (! exists $amp{$spl[0]}) {
-    # no amplicon info: check only for new alignment
+    # no amplicon info: save results, check for new alignment
     print "Warning: no amplicon info for read $spl[0]\n";
     push @res, $line;
     while ($line = <SAM>) {
       chomp $line;
       my @div = split("\t", $line);
-      last if ($div[0] ne $spl[0]);
+      last if (scalar @div < 11 || $div[0] ne $spl[0] ||
+        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
       push @res, $line;
     }
   } else {
@@ -245,8 +250,8 @@ while ($line) {
     while ($line) {
       chomp $line;
       my @div = split("\t", $line);
-      last if ($div[0] ne $spl[0]);
-      die "Error! $ARGV[3] is improperly formatted\n" if (scalar @div < 11);
+      last if (scalar @div < 11 || $div[0] ne $spl[0] ||
+        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
       die "Error! $ARGV[3] contains a supplementary alignment:\n  $line\n"
         if ($div[1] & 0x800);
       my $xs = getTag("AS", @div);

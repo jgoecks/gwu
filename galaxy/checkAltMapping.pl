@@ -186,7 +186,11 @@ while ($line) {
   $count++;
   if ($spl[1] & 0x4) {
     $un++;
-    $line = <SAM>;
+    while ($line = <SAM>) {
+      my @div = split("\t", $line);
+      last if (scalar @div < 11 || $div[0] ne $spl[0] ||
+        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
+    }
     next;
   }
 
@@ -195,7 +199,8 @@ while ($line) {
     print "Warning: skipping read $spl[0] (no amplicon info)\n";
     while ($line = <SAM>) {
       my @div = split("\t", $line);
-      last if ($div[0] ne $spl[0]);
+      last if (scalar @div < 11 || $div[0] ne $spl[0] ||
+        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
     }
     next;
   }
@@ -207,8 +212,8 @@ while ($line) {
   while ($line) {
     chomp $line;
     my @div = split("\t", $line);
-    last if ($div[0] ne $spl[0]);
-    die "Error! $ARGV[1] is improperly formatted\n" if (scalar @div < 11);
+    last if (scalar @div < 11 || $div[0] ne $spl[0] ||
+      ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
     die "Error! $ARGV[1] contains a supplementary alignment:\n  $line\n"
       if ($div[1] & 0x800);
     my $rc = ($div[1] & 0x10 ? 1 : 0); # read maps to minus strand

@@ -14,7 +14,7 @@
     <param format="fasta" name="gen" type="select" label="Reference genome">
       <options from_data_table="all_fasta"/>
     </param>
-    <param name="pct" type="float" value="0.75" min="0" max="1" label="Primer match score threshhold (0-1)" help="Primer scores of at least this value will be considered a match. See &quot;Primer matching score&quot; below for more information."/>
+    <param name="pct" type="float" value="0.75" min="0" max="1" label="Primer match score threshold (0-1)" help="Primer scores of at least this value will be considered a match. See &quot;Primer matching score&quot; below for more information."/>
     <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like a verbose output log file?" help="By default, one output file (listing mapping judgments) is produced."/>
   </inputs>
   <outputs>
@@ -39,9 +39,9 @@ the primers would have bound at that alternative site to the actual primer
 sequences (see *Primer matching score* below).
 
 The output file lists the amplicon, the alternative mapping location, and
-the match judgment (1 if the primer score is above the specified threshhold,
+the match judgment (1 if the primer score is above the specified threshold,
 else 0; if both primers were removed from the read, both must score above
-the threshhold to be considered a match). The tool *Edit a SAM file* uses
+the threshold to be considered a match). The tool *Edit a SAM file* uses
 this output to edit the mapping file.
 
 The optional output alignments log file lists the alignments and scores that

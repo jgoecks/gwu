@@ -26,7 +26,7 @@
       </param>
       <when value="yes">
         <param format="tabular" name="real" type="data" label="Aligned length-variant reads" help="Alignments output from the tool &quot;Align length-variant reads&quot;"/>
-        <param name="pct" type="float" value="0.75" min="0" max="1" label="Maximum primer match score threshhold for external in/dels (0-1)" help="Primer scores above this value will be considered good enough matches to explain the length variant as an artifact. See &quot;External in/dels&quot; and &quot;Primer matching score&quot; sections below for more information."/>
+        <param name="pct" type="float" value="0.75" min="0" max="1" label="Maximum primer match score threshold for external in/dels (0-1)" help="Primer scores above this value will be considered good enough matches to explain the length variant as an artifact. See &quot;External in/dels&quot; and &quot;Primer matching score&quot; sections below for more information."/>
         <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like a log file of the realignments?"/>
       </when>
       <when value="no"/>
@@ -70,7 +70,7 @@ This tool uses the alignment output from the tool *Align length-variant reads*.
 It begins by throwing out some realignments -- external in/del artifacts (see
 *External in/dels* below), and those that have too many substitutions
 (this evaluation is based on Bowtie2's default end-to-end alignment score
-threshhold [-0.6*length - 0.6] and is not parameterized -- cf. lines 183-192 of
+threshold [-0.6*length - 0.6] and is not parameterized -- cf. lines 183-192 of
 filterSAM.pl).
 
 Each remaining realignment, if not identical to the corresponding read mapping
@@ -106,7 +106,7 @@ match and reports the score (see *Primer matching score* below) in the
 alignment output file.
 
 This tool will throw out a realignment with an external in/del if the
-primer match score is above the specified threshhold and thus high enough to
+primer match score is above the specified threshold and thus high enough to
 explain the length variant as an artifact.
 
 Legitimate realignments of reads with external in/dels are given precedence
