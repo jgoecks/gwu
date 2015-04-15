@@ -51,6 +51,8 @@ print OUT q(##fileformat=VCFv4.2
 ##INFO=<ID=CIGAR,Number=1,Type=String,Description="CIGAR representation of the alternate allele">
 ##INFO=<ID=TYPE,Number=1,Type=String,Description="Type of alternate allele (snp, ins, or del)">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele frequency">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth (max. over reference positions)">
 );
 print OUT "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t$samp\n";
 
@@ -157,9 +159,9 @@ while (1) {
 
     # print output
     my $af = int(10000000*$ao/$dep+0.5) / 10000000;
-    print OUT "$iar[0]\t$iar[1]\t.\t$ref\t$alt\t0\t.\t",
-      "AB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=$type",
-      "\tGT\t$gt\n";
+    print OUT "$iar[0]\t$iar[1]\t.\t$ref\t$alt\t0\t.",
+      "\tAB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=$type",
+      "\tGT:AF:DP\t$gt:$af:$dep\n";
 
     # load next
     $iline = <IND>;
@@ -179,9 +181,9 @@ while (1) {
     my $dep = $dp{$sar[0]}{$sar[1]};
     my $af = int(10000000*$ao/$dep+0.5) / 10000000;
     my $cig = "1X";
-    print OUT "$sar[0]\t$sar[1]\t.\t$ref\t$alt\t0\t.\t",
-      "AB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=snp",
-      "\tGT\t$gt\n";
+    print OUT "$sar[0]\t$sar[1]\t.\t$ref\t$alt\t0\t.",
+      "\tAB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=snp",
+      "\tGT:AF:DP\t$gt:$af:$dep\n";
 
     # load next
     $sline = <SNP>;
