@@ -4,6 +4,7 @@
 # Dec. 2014
 
 # Analyze a sample for variants.
+# Software requirements: fastq-join, bowtie2, samtools, VarScan
 
 # inputs
 file1=          # Input FASTQ file #1
@@ -143,20 +144,21 @@ samtools sort $tr16 combsort
 
 # call variants
 echo "Calling variants"
+out8=combFil.pileup
+samtools mpileup -B -Q 0 -d 100000 -f $gen $out7 > $out8
+out9=combFil.snp
+java -jar VarScan.v2.3.7.jar pileup2snp --min-avg-qual 30 --min-coverage 0 --min-var-freq 0.01 --variants < $out8 > $out9
+out10=combFil.indel
+java -jar VarScan.v2.3.7.jar pileup2indel --min-avg-qual 30 --min-coverage 0 --min-var-freq 0.01 --variants < $out8 > $out10
+
+# make VCF, filter, add HP tag
 tr17=temp.vcf
-fbParam="-K -F 0.01 -m 0 -q 30"
-freebayes $fbParam -f $gen $out7 -v $tr17";
+perl makeVCF.pl $out9 $out10 $out8 $tr17
 tr18=temp2.vcf
-vcfbreakmulti $tr17 > $tr18
-
-# filter variants by region
-tr19=temp3.vcf
-perl filterVCF.pl $tr18 $bed $tr19
-
-# filter variants by proximity to homopolymers
-out8=varFil.vcf
-log6=varFil.log
-perl filterVars.pl $tr19 $gen $out8 $log6
+perl filterVCF.pl $tr17 $bed $tr18
+out11=combFil.vcf
+tr19=addHPtoVCF.log
+perl addHPtoVCF.pl $tr18 $gen $out11 $tr19
 
 # remove extra files
 rm $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
@@ -166,5 +168,5 @@ rm $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
 if [ ! -d $dir ]; then
   mkdir $dir
 fi
-mv $out1 $out2 $out3 $out4 $out5 $out6 $out7 $out8 \
-  $log1 $log2 $log3 $log4 $log5 $log6 $len1 $len2 $len3 $len3v $dir
+mv $out1 $out2 $out3 $out4 $out5 $out6 $out7 $out8 $out9 $out10 $out11 \
+  $log1 $log2 $log3 $log4 $log5 $len1 $len2 $len3 $len3v $dir

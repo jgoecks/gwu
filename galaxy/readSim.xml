@@ -1,0 +1,86 @@
+<tool id="readsim" name="Simulate paired-end reads">
+  <description> for a set of amplicons</description>
+  <command interpreter="perl">
+    readSim.pl $ipc $prim ${gen.fields.path} $out1 $out2
+
+    ## optional parameters
+    #if str($opt.opt_selector) == "yes":
+      ${opt.num} ${opt.len} ${opt.score} ${opt.lengths}
+
+      #if str($opt.bedsel.bed_selector) == "yes":
+        ${opt.bedsel.bed}
+      #end if
+      #if str($opt.varsel.var_selector) == "yes":
+        #if str($opt.bedsel.bed_selector) == "no":
+          None
+        #end if
+        ${opt.varsel.var} ${opt.varsel.pct}
+      #end if
+    #end if
+
+  </command>
+  <inputs>
+    <param format="text" name="ipc" type="data" label="File listing potential primer matches" help="Output from ipcress"/>
+    <param format="tabular" name="prim" type="data" label="File listing primer sequences" help="Input to ipcress"/>
+    <param format="fasta" name="gen" type="select" label="Reference genome">
+      <options from_data_table="all_fasta"/>
+    </param>
+
+    <conditional name="opt">
+      <param name="opt_selector" type="select" label="Would you like to set additional parameters?">
+        <option value="no" selected="True">No</option>
+        <option value="yes">Yes</option>
+      </param>
+      <when value="yes">
+        <param name="len" type="integer" value="100" min="1" label="Length of reads to simulate" help="Default: 100"/>
+        <param name="num" type="integer" value="1000" min="1" label="Number of reads to simulate for each perfect match score" help="Non-perfect match scores will be scaled using &quot;Minimum primer matching score&quot; parameter. Default: 1000"/>
+        <param name="score" type="float" value="0.75" min="0" max="0.9999999" label="Minimum primer matching score" help="Default: 0.75"/>
+        <param name="lengths" type="text" value="0,100000" label="Range of allowed amplicon lengths" help="Default: 0,100000"/>
+
+        <conditional name="bedsel">
+          <param name="bed_selector" type="select" label="Would you like to specify a BED file?" help="Used to exclude potential amplicons that overlap the expected target.">
+            <option value="no" selected="True">No</option>
+            <option value="yes">Yes</option>
+          </param>
+          <when value="yes">
+            <param format="bed" name="bed" type="data" label="File listing expected amplicon locations"/>
+          </when>
+          <when value="no"/>
+        </conditional>
+
+        <conditional name="varsel">
+          <param name="var_selector" type="select" label="Would you like to include variants?">
+            <option value="no" selected="True">No</option>
+            <option value="yes">Yes</option>
+          </param>
+          <when value="yes">
+            <param format="tabular" name="var" type="data" label="File listing variants to make in the reads" help="See &quot;Variant file format&quot; below for formatting information"/>
+            <param name="pct" type="integer" value="10" min="0" max="100" label="Percent of reads to make variants" help="Default: 10"/>
+          </when>
+          <when value="no"/>
+        </conditional>
+
+      </when>
+      <when value="no"/>
+    </conditional>
+
+  </inputs>
+
+  <outputs>
+    <data format="fastq" name="out1" label="${tool.name} on ${on_string}: PE reads #1"/>
+    <data format="fastq" name="out2" label="${tool.name} on ${on_string}: PE reads #2"/>
+  </outputs>
+
+  <help>
+This tool simulates paired-end reads. It uses the output from ipcress,
+which lists potential amplicons in a genome.
+
+
+-----
+
+**Options**
+
+
+  </help>
+
+</tool>
