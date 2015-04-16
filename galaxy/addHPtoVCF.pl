@@ -54,10 +54,11 @@ while (my $line = <VCF>) {
   }
   chomp $line;
   my @spl = split("\t", $line);
+  die "Error! $ARGV[0] is improperly formatted\n" if (scalar @spl < 8);
 
   # determine abundance
   if ($spl[7] !~ m/AB\=(.*?)\;/) {
-    die "No AB found in $line\n";
+    die "Error! No AB found in $line\n";
   }
   my $ab = $1;
 
@@ -72,11 +73,11 @@ while (my $line = <VCF>) {
   # calculate abundance if given as 0
   if ($ab == 0) {
     if ($spl[7] !~ m/AO\=(.*?)\;/) {
-      die "No AO found in $line\n";
+      die "Error! No AO found in $line\n";
     }
     my $ct = $1;
     if ($spl[7] !~ m/DP\=(.*?)\;/) {
-      die "No DP found in $line\n";
+      die "Error! No DP found in $line\n";
     }
     $ab = $ct / $1;
     $ab = int(10000000*$ab+0.5)/10000000;
@@ -84,7 +85,7 @@ while (my $line = <VCF>) {
 
   # determine position of variant(s) using CIGAR
   if ($spl[7] !~ m/CIGAR\=(.*?)\;/) {
-    die "No CIGAR found in $line\n";
+    die "Error! No CIGAR found in $line\n";
   }
   my $cig = $1;
   my @loc = ();
@@ -143,7 +144,7 @@ while (my $line = <VCF>) {
     $sub += $1 if ($2 ne 'D');
   }
   if (scalar @loc == 0) {
-    die "No variant position in $line\n";
+    die "Error! No variant position in $line\n";
   }
 
   if ($flag) {
@@ -179,7 +180,7 @@ while (my $line = <VCF>) {
       }
     }
     if (! $seq) {
-      die "Cannot find chromosome $chr in $ARGV[1]\n";
+      die "Error! Cannot find chromosome $chr in $ARGV[1]\n";
     }
 
     # judge chrom segments (10bp on either side of variant)
