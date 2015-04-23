@@ -181,12 +181,12 @@
             </param>
 
             <when value="single">
-                <param name="input_1" format="fastqsanger" type="data" label="FASTQ file" help="Nucleotide-space: Must have Sanger-scaled quality values with ASCII offset 33"/>
+                <param name="input_1" format="fastqsanger" type="data" label="FASTQ file" help="Must be of datatype &quot;fastqsanger&quot;" />
                 <param name="unaligned_file" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Write unaligned reads (in fastq format) to separate file(s)" help="--un/--un-conc; This triggers --un parameter for single reads and --un-conc for paired reads" />
             </when>
             <when value="paired">
-                <param name="input_1" format="fastqsanger" type="data" label="FASTQ file" help="Nucleotide-space: Must have Sanger-scaled quality values with ASCII offset 33" />
-                <param name="input_2" format="fastqsanger" type="data" label="FASTQ file" help="Nucleotide-space: Must have Sanger-scaled quality values with ASCII offset 33" />
+                <param name="input_1" format="fastqsanger" type="data" label="FASTQ file #1" help="Must be of datatype &quot;fastqsanger&quot;" />
+                <param name="input_2" format="fastqsanger" type="data" label="FASTQ file #2" help="Must be of datatype &quot;fastqsanger&quot;" />
                 <param name="unaligned_file" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Write unaligned reads (in fastq format) to separate file(s)" help="--un/--un-conc; This triggers --un parameter for single reads and --un-conc for paired reads" />
                 <conditional name="paired_options">
                     <param name="paired_options_selector" type="select" label="Do you want to set paired-end options?" help="See &quot;Alignment Options&quot; section of Help below for information">
@@ -213,7 +213,7 @@
                 </conditional>
             </when>
             <when value="paired_collection">
-                <param name="input_1" format="fastqsanger" type="data_collection" collection_type="paired" label="FASTQ Paired Dataset" help="Nucleotide-space: Must have Sanger-scaled quality values with ASCII offset 33" />
+                <param name="input_1" format="fastqsanger" type="data_collection" collection_type="paired" label="FASTQ Paired Dataset" help="Must be of datatype &quot;fastqsanger&quot;" />
                 <param name="unaligned_file" type="boolean" truevalue="true" falsevalue="false" checked="False" label="Write unaligned reads (in fastq format) to separate file(s)" help="--un/--un-conc; This triggers --un parameter for single reads and --un-conc for paired reads" />
                 <conditional name="paired_options">
                     <param name="paired_options_selector" type="select" label="Do you want to set paired-end options?" help="See &quot;Alignment Options&quot; section of Help below for information">

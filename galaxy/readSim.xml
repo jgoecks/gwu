@@ -35,10 +35,10 @@
         <param name="len" type="integer" value="100" min="1" label="Length of reads to simulate" help="Default: 100"/>
         <param name="num" type="integer" value="1000" min="1" label="Number of reads to simulate for each perfect match score" help="Non-perfect match scores will be scaled using &quot;Minimum primer matching score&quot; parameter. Default: 1000"/>
         <param name="score" type="float" value="0.75" min="0" max="0.9999999" label="Minimum primer matching score" help="Default: 0.75"/>
-        <param name="lengths" type="text" value="0,100000" label="Range of allowed amplicon lengths" help="Default: 0,100000"/>
+        <param name="lengths" type="text" value="0,100000" label="Range of allowed amplicon lengths" help="Minimum and maximum, comma-separated. Default: 0,100000"/>
 
         <conditional name="bedsel">
-          <param name="bed_selector" type="select" label="Would you like to specify a BED file?" help="Used to exclude potential amplicons that overlap the expected target.">
+          <param name="bed_selector" type="select" label="Would you like to specify a BED file?" help="Used to exclude potential amplicons that overlap, but do not exactly match, the expected target.">
             <option value="no" selected="True">No</option>
             <option value="yes">Yes</option>
           </param>
@@ -75,11 +75,11 @@
 This tool simulates paired-end reads. It uses the output from ipcress,
 which lists potential amplicons in a genome.
 
-
 -----
 
 **Options**
 
+-- many options --
 
   </help>
 

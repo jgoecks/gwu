@@ -4,7 +4,7 @@
     makeBED.pl $in $out
   </command>
   <inputs>
-    <param format="tabular" name="in" type="data" label="File listing amplicon specifications" help="Header line should contain columns &quot;Assay_Name&quot;, &quot;F-sp&quot;, &quot;R-sp&quot;, &quot;Chr&quot;, &quot;From&quot;, and &quot;To&quot;./>
+    <param format="tabular" name="in" type="data" label="File listing amplicon specifications" help="Header line should contain columns &quot;Assay_Name&quot;, &quot;F-sp&quot;, &quot;R-sp&quot;, &quot;Chr&quot;, &quot;From&quot;, and &quot;To&quot;."/>
   </inputs>
   <outputs>
     <data format="bed" name="out" label="${tool.name} on ${on_string}"/>
