@@ -2,6 +2,11 @@
   <description> of reads based on quality scores and length</description>
   <command>
     qualTrim -i $in -o $out -l $l -q $q -t $t -n $n
+    #if str($trim.trim_opt) == "five":
+      -5
+    #elif str($trim.trim_opt) == "three":
+      -3
+    #end if
   </command>
   <inputs>
     <param format="fastqsanger" name="in" type="data" label="FASTQ file" help="Must be of datatype &quot;fastqsanger&quot;"/>
@@ -9,6 +14,16 @@
     <param name="q" type="float" value="0" min="0" label="Minimum average quality for the window"/>
     <param name="t" type="float" value="0" min="0" label="Minimum average quality for the full-length read" help="After any window-based truncations"/>
     <param name="n" type="integer" value="0" min="0" label="Minimum read length" help="After any window-based truncations"/>
+    <conditional name="trim">
+      <param name="trim_opt" type="select" label="How would you like the window-based trimming to be performed?">
+        <option value="both" selected="True">Trim both ends</option>
+        <option value="five">Trim the 5' end only</option>
+        <option value="three">Trim the 3' end only</option>
+      </param>
+      <when value="both"/>
+      <when value="five"/>
+      <when value="three"/>
+    </conditional>
   </inputs>
   <outputs>
     <data format="fastqsanger" name="out" label="${tool.name} on ${on_string}"/>
@@ -21,7 +36,7 @@ minimum length. There is no default filtering.
 
 -----
 
-**Window-based average**
+**Window-based trimming**
 
 If a window-based average is selected, a sliding window of quality scores will
 be examined from each end of a read. The window stops sliding when the average
@@ -45,6 +60,9 @@ Using a window size of 3bp and a minimum quality of 20.0 produces::
 Note: at the very ends of the read, windows of quality scores smaller than
 the specified value are also examined. This is why the 3' end of read1
 was truncated of its last base.
+
+Rather than examine both ends of a read, one can choose to perform these
+truncations at only the 5' end or 3' end.
 
 -----
 

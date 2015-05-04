@@ -6,7 +6,9 @@
 */
 
 #define MAX_SIZE    1024   // maximum length for input line
+#define OFFSET      33     // ASCII-based offset of quality scores
 
+// command-line parameters
 #define HELP        "-h"
 #define INFILE      "-i"
 #define OUTFILE     "-o"
@@ -14,22 +16,24 @@
 #define WINDOWAVG   "-q"   // average quality score for sliding window
 #define QUALAVG     "-t"   // average quality score for entire read
 #define MINLEN      "-n"   // minimum length of a read
+#define FIVEOPT     "-5"   // option to trim only at 5' end
+#define THREEOPT    "-3"   // option to trim only at 3' end
 
+// error messages
 #define ERROPEN     0
-#define MERROPEN    "cannot open file for reading"
+#define MERROPEN    ": cannot open file for reading"
 #define ERRCLOSE    1
-#define MERRCLOSE   "cannot close file"
+#define MERRCLOSE   "Cannot close file"
 #define ERROPENW    2
-#define MERROPENW   "cannot open file for writing"
-#define ERRUNK      3
-#define MERRUNK     "unknown file type (not fasta or fastq)"
-#define ERRMEM      4
-#define MERRMEM     "cannot allocate memory"
+#define MERROPENW   ": cannot open file for writing"
+#define ERRMEM      3
+#define MERRMEM     "Cannot allocate memory"
+#define ERRPARAM    4
+#define MERRPARAM   ": unknown command-line parameter"
 #define ERRSEQ      5
-#define MERRSEQ     "cannot load sequence"
+#define MERRSEQ     "Cannot load sequence"
 #define ERRFLOAT    6
 #define MERRFLOAT   ": cannot convert to float"
 #define ERRINT      7
 #define MERRINT     ": cannot convert to int"
-#define ERRLEN      8
-#define MERRLEN     ": sequence too short for quality window"
+#define DEFERR      "Unknown error"

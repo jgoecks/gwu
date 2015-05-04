@@ -14,15 +14,21 @@
  * Print usage information.
  */
 void usage(void) {
-  fprintf(stderr, "Usage: ./qualTrim  %s <input file>  ", INFILE);
-  fprintf(stderr, "%s <output file>", OUTFILE);
-  fprintf(stderr, "\nOptional parameters:\n");
+  fprintf(stderr, "Usage: ./qualTrim {%s <file> ", INFILE);
+  fprintf(stderr, "%s <file>} [optional parameters]\n", OUTFILE);
+  fprintf(stderr, "Required parameters:\n");
+  fprintf(stderr, "  %s <file>   Input FASTQ file with Sanger-scale\n", INFILE);
+  fprintf(stderr, "                quality scores (phred+33)\n");
+  fprintf(stderr, "  %s <file>   Output FASTQ file\n", OUTFILE);
+  fprintf(stderr, "Optional parameters:\n");
   fprintf(stderr, "  %s <int>    Window length\n", WINDOWLEN);
   fprintf(stderr, "  %s <float>  Minimum avg. quality in the window\n", WINDOWAVG);
   fprintf(stderr, "  %s <float>  Minimum avg. quality for the full read\n", QUALAVG);
   fprintf(stderr, "                (after any window truncations)\n");
   fprintf(stderr, "  %s <int>    Minimum length of a read\n", MINLEN);
   fprintf(stderr, "                (after any window truncations)\n");
+  fprintf(stderr, "  %s          Option to trim reads only at 5' end\n", FIVEOPT);
+  fprintf(stderr, "  %s          Option to trim reads only at 3' end\n", THREEOPT);
   exit(-1);
 }
 
@@ -31,26 +37,17 @@ void usage(void) {
  */
 int error(char* msg, int err) {
   char* msg2;
-  if (err == ERROPEN)
-    msg2 = MERROPEN;
-  else if (err == ERRCLOSE)
-    msg2 = MERRCLOSE;
-  else if (err == ERROPENW)
-    msg2 = MERROPENW;
-  else if (err == ERRUNK)
-    msg2 = MERRUNK;
-  else if (err == ERRMEM)
-    msg2 = MERRMEM;
-  else if (err == ERRSEQ)
-    msg2 = MERRSEQ;
-  else if (err == ERRINT)
-    msg2 = MERRINT;
-  else if (err == ERRFLOAT)
-    msg2 = MERRFLOAT;
-  else if (err == ERRLEN)
-    msg2 = MERRLEN;
+  if (err == ERROPEN) msg2 = MERROPEN;
+  else if (err == ERRCLOSE) msg2 = MERRCLOSE;
+  else if (err == ERROPENW) msg2 = MERROPENW;
+  else if (err == ERRMEM) msg2 = MERRMEM;
+  else if (err == ERRPARAM) msg2 = MERRPARAM;
+  else if (err == ERRSEQ) msg2 = MERRSEQ;
+  else if (err == ERRINT) msg2 = MERRINT;
+  else if (err == ERRFLOAT) msg2 = MERRFLOAT;
+  else msg2 = DEFERR;
 
-  fprintf(stderr, "Error! %s: %s\n", msg, msg2);
+  fprintf(stderr, "Error! %s%s\n", msg, msg2);
   return -1;
 }
 
@@ -96,7 +93,7 @@ int getEnd(char* line, int len, float qual, int end) {
     float sum = 0.0f;
     int j = end - 1;
     for (int k = 0; k < i; k++)
-      sum += line[j - k] - 33;
+      sum += line[j - k] - OFFSET;
     if (sum / i < qual)
       last = j - i + 1;
     else if (last)
@@ -105,7 +102,7 @@ int getEnd(char* line, int len, float qual, int end) {
   for (i = end - 1; i > len - 2; i--) {
     float sum = 0.0f;
     for (int j = 0; j < len; j++)
-      sum += line[i - j] - 33;
+      sum += line[i - j] - OFFSET;
     if (sum / len < qual)
       last = i - len + 1;
     else if (last)
@@ -125,7 +122,7 @@ int getStart(char* line, int len, float qual, int end) {
   for (i = 1; i < len; i++) {
     float sum = 0.0f;
     for (int k = 0; k < i; k++)
-      sum += line[k] - 33;
+      sum += line[k] - OFFSET;
     if (sum / i < qual)
       st = i;
     else if (st)
@@ -134,7 +131,7 @@ int getStart(char* line, int len, float qual, int end) {
   for (i = 0; i < end - len + 1; i++) {
     float sum = 0.0f;
     for (int j = 0; j < len; j++)
-      sum += line[i + j] - 33;
+      sum += line[i + j] - OFFSET;
     if (sum / len < qual)
       st = i + len;
     else if (st)
@@ -148,9 +145,13 @@ int getStart(char* line, int len, float qual, int end) {
 /* int trimQual()
  * Determine ends of the read.
  */
-int trimQual(char* line, int len, float qual, int* end) {
-  *end = getEnd(line, len, qual, *end);
-  int st = getStart(line, len, qual, *end);
+int trimQual(char* line, int len, float qual, int* end,
+    int opt5, int opt3) {
+  if (opt3)
+    *end = getEnd(line, len, qual, *end);
+  int st = 0;
+  if (opt5)
+    st = getStart(line, len, qual, *end);
   return st;
 }
 
@@ -161,7 +162,7 @@ int trimQual(char* line, int len, float qual, int* end) {
 int checkQual(char* line, int st, int end, float avg) {
   float sum = 0.0f;
   for (int i = st; i < end; i++)
-    sum += line[i] - 33;
+    sum += line[i] - OFFSET;
   return sum / (end - st) < avg ? 1 : 0;
 }
 
@@ -169,7 +170,7 @@ int checkQual(char* line, int st, int end, float avg) {
  * Control the I/O.
  */
 void readFile(FILE* in, FILE* out, int len, float qual,
-    float avg, int minLen) {
+    float avg, int minLen, int opt5, int opt3) {
   char* head = (char*) memalloc(MAX_SIZE);
   char* seq = (char*) memalloc(MAX_SIZE);
   char* line = (char*) memalloc(MAX_SIZE);
@@ -179,13 +180,12 @@ void readFile(FILE* in, FILE* out, int len, float qual,
     if (head[0] != '@')
       continue;
 
+    // load sequence and quality scores
     if (fgets(seq, MAX_SIZE, in) == NULL)
       exit(error("", ERRSEQ));
-
     for (int i = 0; i < 2; i++)
       if (fgets(line, MAX_SIZE, in) == NULL)
         exit(error("", ERRSEQ));
-
     int end = strlen(line) - 1;
     if (line[end] == '\n')
       line[end] = '\0';
@@ -194,14 +194,16 @@ void readFile(FILE* in, FILE* out, int len, float qual,
       continue;
     }
 
+    // trim read
     int st = 0;
     if (len)
-      st = trimQual(line, len, qual, &end);
+      st = trimQual(line, len, qual, &end, opt5, opt3);
     if (avg && checkQual(line, st, end, avg)) {
       elim++;
       continue;
     }
 
+    // print output
     if (st < end && end - st >= minLen) {
       fprintf(out, "%s", head);
       for (int i = st; i < end; i++)
@@ -214,8 +216,9 @@ void readFile(FILE* in, FILE* out, int len, float qual,
     } else
       elim++;
   }
-  printf("Reads printed: %d\nReads eliminated: %d\n", count, elim);
 
+  printf("Reads printed: %d\nReads eliminated: %d\n",
+    count, elim);
   free(seq);
   free(line);
   free(head);
@@ -234,11 +237,11 @@ FILE* openWrite(char* outFile) {
 /* void openFiles()
  * Open input and output files.
  */
-void openFiles(char* outFile, FILE** out, char* inFile, FILE** in) {
+void openFiles(char* outFile, FILE** out,
+    char* inFile, FILE** in) {
   *in = fopen(inFile, "r");
   if (*in == NULL)
     exit(error(inFile, ERROPEN));
-
   *out = openWrite(outFile);
 }
 
@@ -248,14 +251,17 @@ void openFiles(char* outFile, FILE** out, char* inFile, FILE** in) {
 void getParams(int argc, char** argv) {
 
   char* outFile = NULL, *inFile = NULL;
-  int windowLen = 0;
+  int windowLen = 0, minLen = 0, opt5 = 1, opt3 = 1;
   float windowAvg = 0.0f, qualAvg = 0.0f;
-  int minLen = 0;
 
   // parse argv
   for (int i = 1; i < argc; i++) {
     if (!strcmp(argv[i], HELP))
       usage();
+    else if (!strcmp(argv[i], FIVEOPT))
+      opt3 = 0;
+    else if (!strcmp(argv[i], THREEOPT))
+      opt5 = 0;
     else if (i < argc - 1) {
       if (!strcmp(argv[i], OUTFILE))
         outFile = argv[++i];
@@ -269,8 +275,10 @@ void getParams(int argc, char** argv) {
         qualAvg = getFloat(argv[++i]);
       else if (!strcmp(argv[i], MINLEN))
         minLen = getInt(argv[++i]);
+      else
+        exit(error(argv[i], ERRPARAM));
     } else
-      usage();
+      exit(error(argv[i], ERRPARAM));
   }
 
   if (outFile == NULL || inFile == NULL)
@@ -278,7 +286,8 @@ void getParams(int argc, char** argv) {
 
   FILE* out = NULL, *in = NULL;
   openFiles(outFile, &out, inFile, &in);
-  readFile(in, out, windowLen, windowAvg, qualAvg, minLen);
+  readFile(in, out, windowLen, windowAvg, qualAvg,
+    minLen, opt5, opt3);
 
   if (fclose(out) || fclose(in))
     exit(error("", ERRCLOSE));
