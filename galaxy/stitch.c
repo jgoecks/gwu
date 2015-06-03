@@ -264,14 +264,15 @@ void printRes(FILE* out, FILE* log, FILE* dove,
 /* void printFail()
  * Print stitch failure reads.
  */
-void printFail(FILE* un1, FILE* un2, FILE* log, char* header,
-    char* seq1, char* seq2, char* qual1, char* qual2, int len) {
+void printFail(FILE* un1, FILE* un2, FILE* log,
+    char* header, char* head1, char* head2, char* seq1,
+    char* seq2, char* qual1, char* qual2, int len) {
   if (log != NULL)
     fprintf(log, "%s\tn/a\n", header);
   if (un1 != NULL && un2 != NULL) {
-    fprintf(un1, "@%s\n%s\n+\n%s\n", header, seq1, qual1);
+    fprintf(un1, "@%s\n%s\n+\n%s\n", head1, seq1, qual1);
     // put rev sequence back
-    fprintf(un2, "@%s\n", header);
+    fprintf(un2, "@%s\n", head2);
     for (int i = len - 1; i > -1; i--)
       fprintf(un2, "%c", rc(seq2[i]));
     fprintf(un2, "\n+\n");
@@ -290,28 +291,47 @@ int readFile(FILE* in1, FILE* in2, FILE* out,
     int maxLen, int* stitch, int* fail) {
 
   char* line = (char*) memalloc(MAX_SIZE);
-  char* header = (char*) memalloc(MAX_SIZE);
+  char* head1 = (char*) memalloc(MAX_SIZE);
   char* seq1 = (char*) memalloc(MAX_SIZE);
   char* qual1 = (char*) memalloc(MAX_SIZE);
+  char* head2 = (char*) memalloc(MAX_SIZE);
   char* seq2 = (char*) memalloc(MAX_SIZE);
   char* qual2 = (char*) memalloc(MAX_SIZE);
+  char* header = (char*) memalloc(MAX_SIZE); // consensus header
 
   int count = 0;
   while (fgets(line, MAX_SIZE, in1) != NULL) {
     count++;
 
-    // save header
+    // save headers
     int i;
-    for (i = 0; line[i + 1] != ' ' && line[i + 1] != '\n'; i++)
-      header[i] = line[i + 1];
-    header[i] = '\0';
-
-    // check header of second read
+    for (i = 0; line[i + 1] != '\n'; i++)
+      head1[i] = line[i + 1];
+    head1[i] = '\0';
     if (fgets(line, MAX_SIZE, in2) == NULL)
       exit(error("", ERRSEQ));
-    for (i = 0; i < strlen(header); i++)
-      if (header[i] != line[i + 1])
-        exit(error(header, ERRHEAD));
+    for (i = 0; line[i + 1] != '\n'; i++)
+      head2[i] = line[i + 1];
+    head2[i] = '\0';
+
+    // make sure headers match (up to first space character),
+    // save consensus header too
+    int ok = 0;
+    int j;
+    for (j = 0; j < i; j++) {
+      if (head1[j] != head2[j]) {
+        if (ok)
+          break;
+        else
+          exit(error(header, ERRHEAD));
+      } else if (head1[j] == ' ')
+        ok = 1;  // headers match
+      header[j] = head1[j];
+    }
+    if (header[j - 1] == ' ')
+      header[j - 1] = '\0'; // removing trailing space
+    else
+      header[j] = '\0';
 
     // save sequences and quality scores for the reads
     int len1 = getSeq(in1, line, seq1, qual1, FWD, FWD);
@@ -322,8 +342,8 @@ int readFile(FILE* in1, FILE* in2, FILE* out,
     int pos = findPos(seq1, seq2, qual1, qual2, len1, len2,
       overlap, dovetail, mismatch, maxLen, &best);
     if (pos == len1 - overlap + 1) {
-      printFail(un1, un2, log, header, seq1, seq2, qual1,
-        qual2, len2);
+      printFail(un1, un2, log, header, head1, head2, seq1,
+        seq2, qual1, qual2, len2);
       (*fail)++;
     } else {
       printRes(out, log, dove, header, seq1, seq2, qual1,
@@ -334,11 +354,13 @@ int readFile(FILE* in1, FILE* in2, FILE* out,
 
   // free memory
   free(line);
-  free(header);
+  free(head1);
   free(seq1);
   free(qual1);
+  free(head2);
   free(seq2);
   free(qual2);
+  free(header);
   return count;
 }
 
