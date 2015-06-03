@@ -323,7 +323,7 @@ int readFile(FILE* in1, FILE* in2, FILE* out,
         if (ok)
           break;
         else
-          exit(error(header, ERRHEAD));
+          exit(error(head1, ERRHEAD));
       } else if (head1[j] == ' ')
         ok = 1;  // headers match
       header[j] = head1[j];
