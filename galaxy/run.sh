@@ -4,15 +4,18 @@
 # Dec. 2014
 
 # Analyze a sample for variants.
-# Software requirements: fastq-join, bowtie2, samtools, VarScan
+# External software requirements:
+#   - bowtie2 (2.2.3)
+#   - samtools (0.1.19)
+#   - VarScan (2.3.7)
 
-# inputs
-file1=          # Input FASTQ file #1
-file2=          # Input FASTQ file #2
-bed=            # BED file listing locations of primers
-gen=            # reference genome (FASTA)
-idx=            # bowtie2 indexes (will be generated if necessary)
-dir=.           # output directory
+# input files
+file1=$1          # Input FASTQ file #1
+file2=$2          # Input FASTQ file #2
+bed=$3            # BED file listing locations of primers
+gen=$4            # reference genome (FASTA)
+idx=$5            # bowtie2 index prefix (indexes will be generated if necessary)
+dir=$6            # output directory
 
 # check input files
 if [[ ! -f $file1 || ! -f $file2 ]]; then
@@ -33,20 +36,20 @@ if [ ! -f $prim ]; then
 fi
 
 # stitch together reads
-echo "Joining reads"
-overlap=20    # minimum overlap for joining
+echo "Stitching reads"
 tr1=join.fastq
 tr2=un1.fastq
 tr3=un2.fastq
-fastq-join -m $overlap $file1 $file2 -o %.fastq
+stParam="-m 20 -p 0.1 -d"  # min overlap 20, 10% allowed mismatches, dovetailing
+./stitch -1 $file1 -2 $file2 -o $tr1 -u1 $tr2 -u2 $tr3 $stParam
 
 # remove primers, with -rq
 echo "Removing primers"
 log1=joinlog.txt
-out1=joined.fastq
+tr0=join-pr.fastq
 tr4=join-nopr.fastq
-rpParam="-fp -1,1 -rp -1,1 -ef 2 -er 3 -rl 16 -el 1 -b $bed -bp -1,1";
-removePrimer -i $tr1 -p $prim -o $out1 $rpParam -rq -l $log1 -w $tr4
+rpParam="-fp -1,1 -rp -1,1 -ef 2 -er 2"  # allowing 2 subs, can start at +/- 1
+./removePrimer -i $tr1 -p $prim -o $tr0 $rpParam -rq -l $log1 -w $tr4  # require both primers
 
 # retrieve reads whose primers weren't found
 echo "Getting failure reads"
@@ -64,37 +67,26 @@ tr7=nopr1-pr.fastq
 tr8=nopr2-pr.fastq
 log2=nopr1log.txt
 log3=nopr2log.txt
-removePrimer -i $tr5 -p $prim -o $tr7 $rpParam -l $log2
-removePrimer -i $tr6 -p $prim -o $tr8 $rpParam -l $log3
+rpParam2="-rl 16 -el 1 -b $bed -bp -1,1"  # more options to find second primer
+./removePrimer -i $tr5 -p $prim -o $tr7 $rpParam $rpParam2 -l $log2
+./removePrimer -i $tr6 -p $prim -o $tr8 $rpParam $rpParam2 -l $log3
 
-# get common reads and singletons
-echo "Getting common reads"
-out2=single.fastq
-tr9=gc1.fastq
-tr10=gc2.fastq
-tr11=chim.fastq
-perl getCommon.pl $tr7 $tr8 $tr9 $tr10 $out2 $tr11
-
-# join matches
-echo "Joining reads again"
-tr12=gcjoin.fastq
-tr13=gcun1.fastq
-tr14=gcun2.fastq
-fastq-join -m $overlap $tr9 $tr10 -o gc%.fastq
-
-# cat joined together, and singletons together
-cat $tr12 >> $out1
-cat $tr13 $tr14 >> $out2
-
-# cat joined and singletons
-tr15=temp.fastq
-cat $out1 $out2 > $tr15
+# filter singletons
+tr9=noprcomb.fastq
+fsParam="-b -q -c"  # prefer both primers removed, higher quality read, no chimeras
+perl filterSingle.pl $tr7 $tr8 $tr9 $fsParam
 
 # quality trim
 echo "Quality filtering"
-out3=comb.fastq
-qtParam="-t 30 -n 20"  # min. avg. qual. of 30; min. len. 20; no window filtering
-qualTrim -i $tr15 -o $out3 $qtParam
+out1=joined.fastq
+qtParam="-t 30 -n 20"  # min avg qual 30; min len 20; no window filtering
+./qualTrim -i $tr0 -o $out1 $qtParam
+tr10=noprcomb-qt.fastq
+./qualTrim -i $tr9 -o $tr10 $qtParam
+
+# cat joined and singletons
+out2=combined.fastq
+cat $out1 $tr10 > $out2
 
 # check for bowtie2 indexes
 if [[ ! -f $idx.1.bt2 || ! -f $idx.2.bt2 ||
@@ -106,67 +98,67 @@ fi
 
 # map with bowtie2
 echo "Mapping with bowtie2"
-out4=comb.sam
+out3=combined.sam
 bwtParam="-D 200 -N 1 -L 18 -i S,1,0.50 -k 20"
-proc=1   # number of processors
-bowtie2 -x $idx -U $out3 -S $out4 $bwtParam -p $proc
+proc=4   # number of processors
+bowtie2 -x $idx -U $out2 -S $out3 $bwtParam -p $proc
 
 # find length variants
 echo "Finding length variants"
-len1=len1.txt
-perl findLengthVars.pl $out1 $bed $len1
-len2=len2.fastq
-perl getLengthVars.pl $out1 $len1 $len2
-len3=len3.txt
-len3v=len3v.txt
-perl alignLengthVars.pl $len2 $prim $bed $len3 $len3v $gen
+tr11=len1.txt
+perl findLengthVars.pl $out1 $bed $tr11
+tr12=len2.fastq
+perl getLengthVars.pl $out1 $tr11 $tr12
+len3=realign.txt
+tr13=len3v.txt
+perl alignLengthVars.pl $tr12 $prim $bed $len3 $tr13 $gen
 
 # check alternative mapping sites
-out5=altMapping.txt
-log4=altMapping.log
-if [ ! -f $out5 ]; then
+out4=altMapping.txt
+if [ ! -f $out4 ]; then
   echo "Checking alternative mapping sites"
-  perl checkAltMapping.pl $out3 $out4 $prim $bed $gen $out5 $log4
+  perl checkAltMapping.pl $out2 $out3 $prim $bed $gen $out4
 fi
 
 # filter SAM -- multi-mapping and realignment of length variants
 echo "Filtering SAM"
-out6=combFil.sam
-log5=realign.log
-perl filterSAM.pl $out3 $bed $out5 $out4 $out6 $len3 $log5
+out5=combinedFiltered.sam
+log4=realign.log
+perl filterSAM.pl $out2 $bed $out4 $out3 $out5 $len3 $log4
 
 # convert SAM to sorted BAM
 echo "Converting SAM to sorted BAM"
-tr16=temp.bam
-samtools view -b -S $out6 > $tr16
-out7=combsort.bam
-samtools sort $tr16 combsort
+tr14=temp.bam
+samtools view -b -S $out5 > $tr14
+out6=combinedFiltered.bam
+samtools sort $tr14 combinedFiltered
 
 # call variants
 echo "Calling variants"
-out8=combFil.pileup
-samtools mpileup -B -Q 0 -d 100000 -f $gen $out7 > $out8
-out9=combFil.snp
-java -jar VarScan.v2.3.7.jar pileup2snp --min-avg-qual 30 --min-coverage 0 --min-var-freq 0.01 --variants < $out8 > $out9
-out10=combFil.indel
-java -jar VarScan.v2.3.7.jar pileup2indel --min-avg-qual 30 --min-coverage 0 --min-var-freq 0.01 --variants < $out8 > $out10
+out7=combinedFiltered.pileup
+samtools mpileup -B -Q 0 -d 100000 -f $gen $out6 > $out7
+qual=30  # min quality score to count a base
+tr15=combFil.snp
+java -jar VarScan.v2.3.7.jar pileup2snp --min-avg-qual $qual --min-coverage 0 --min-var-freq 0.01 --variants < $out7 > $tr15
+tr16=combFil.indel
+java -jar VarScan.v2.3.7.jar pileup2indel --min-avg-qual $qual --min-coverage 0 --min-var-freq 0.01 --variants < $out7 > $tr16
 
-# make VCF, filter, add HP tag
+# make VCF, filter
+echo "Producing VCF"
 tr17=temp.vcf
-perl makeVCF.pl $out9 $out10 $out8 $tr17
+perl makeVCF.pl $tr15 $tr16 $out7 $tr17 $qual
 tr18=temp2.vcf
 perl filterVCF.pl $tr17 $bed $tr18
-out11=combFil.vcf
-tr19=addHPtoVCF.log
-perl addHPtoVCF.pl $tr18 $gen $out11 $tr19
+out8=combinedFiltered.vcf
+perl addHPtoVCF.pl $tr18 $gen $out8
 
 # remove extra files
-rm $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
-  $tr11 $tr12 $tr13 $tr14 $tr15 $tr16 $tr17 $tr18 $tr19
+rm $tr0 $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
+  $tr11 $tr12 $tr13 $tr14 $tr15 $tr16 $tr17 $tr18
 
 # move files to output directory
 if [ ! -d $dir ]; then
   mkdir $dir
 fi
-mv $out1 $out2 $out3 $out4 $out5 $out6 $out7 $out8 $out9 $out10 $out11 \
-  $log1 $log2 $log3 $log4 $log5 $len1 $len2 $len3 $len3v $dir
+mv $out1 $out2 $out3 $out4 $out5 $out6 $out7 $out8 \
+  $log1 $log2 $log3 $log4 $len3 $dir

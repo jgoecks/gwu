@@ -121,8 +121,8 @@ while (my $line = <FQ>) {
       last;
     }
   }
-  die "Error! $ARGV[0] is improperly formatted:\n  ",
-    "no amplicon ID in $line\n" if (!$id);
+  die "Error! $ARGV[0] is improperly formatted:\n",
+    "  no amplicon ID in $line\n" if (!$id);
   my $que = substr($spl[0], 1);
 
   # check amplicon, and for duplicates
@@ -183,13 +183,18 @@ while ($line) {
   }
   my @spl = split("\t", $line);
   die "Error! $ARGV[1] is improperly formatted\n" if (scalar @spl < 11);
+  die "Error! $ARGV[1] contains a supplementary alignment:\n$line\n"
+    if ($spl[1] & 0x800);
+  die "Error! $ARGV[1] is improperly formatted ",
+    "(possibly coordinate sorted?)\n$line\n" if ($spl[1] & 0x100);
   $count++;
   if ($spl[1] & 0x4) {
     $un++;
     while ($line = <SAM>) {
       my @div = split("\t", $line);
       last if (scalar @div < 11 || $div[0] ne $spl[0] ||
-        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
+        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])
+        && $div[9] ne '*'));
     }
     next;
   }
@@ -200,7 +205,8 @@ while ($line) {
     while ($line = <SAM>) {
       my @div = split("\t", $line);
       last if (scalar @div < 11 || $div[0] ne $spl[0] ||
-        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
+        ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9]) 
+        && $div[9] ne '*'));
     }
     next;
   }
@@ -213,8 +219,9 @@ while ($line) {
     chomp $line;
     my @div = split("\t", $line);
     last if (scalar @div < 11 || $div[0] ne $spl[0] ||
-      ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9])));
-    die "Error! $ARGV[1] contains a supplementary alignment:\n  $line\n"
+      ($div[9] ne $spl[9] && $div[9] ne revComp($spl[9]) 
+      && $div[9] ne '*'));
+    die "Error! $ARGV[1] contains a supplementary alignment:\n$line\n"
       if ($div[1] & 0x800);
     my $rc = ($div[1] & 0x10 ? 1 : 0); # read maps to minus strand
 
