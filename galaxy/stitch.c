@@ -37,6 +37,7 @@ void usage(void) {
   fprintf(stderr, "  %s               Option to produce shortest stitched read, given\n", MAXOPT);
   fprintf(stderr, "                     multiple overlapping possibilities (by default,\n");
   fprintf(stderr, "                     the longest stitched read is produced)\n");
+  fprintf(stderr, "  %s              Option to print counts of stitching results to stdout\n", VERBOSE);
   exit(-1);
 }
 
@@ -415,6 +416,7 @@ void getParams(int argc, char** argv) {
     *unFile1 = NULL, *unFile2 = NULL, *logFile = NULL,
     *doveFile = NULL;
   int overlap = DEFOVER, dovetail = 0, maxLen = 1;
+  int verbose = 0;
   float mismatch = DEFMISM;
 
   // parse argv
@@ -425,6 +427,8 @@ void getParams(int argc, char** argv) {
       maxLen = 0;
     else if (!strcmp(argv[i], DOVEOPT))
       dovetail = 1;
+    else if (!strcmp(argv[i], VERBOSE))
+      verbose = 1;
     else if (i < argc - 1) {
       if (!strcmp(argv[i], OUTFILE))
         outFile = argv[++i];
@@ -470,9 +474,12 @@ void getParams(int argc, char** argv) {
   int count = readFile(in1, in2, out, un1, un2, log,
     overlap, dovetail, dove, mismatch, maxLen,
     &stitch, &fail);
-  printf("Reads analyzed: %d\n", count);
-  printf("  Successfully stitched: %d\n", stitch);
-  printf("  Stitch failures: %d\n", fail);
+
+  if (verbose) {
+    printf("Reads analyzed: %d\n", count);
+    printf("  Successfully stitched: %d\n", stitch);
+    printf("  Stitch failures: %d\n", fail);
+  }
 
   // close files
   if (fclose(out) || fclose(in1) || fclose(in2) ||

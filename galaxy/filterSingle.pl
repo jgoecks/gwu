@@ -93,7 +93,7 @@ while (my $q = <FQ1>) {
   $count++;
 }
 close FQ1;
-print "Reads in $ARGV[0]: $count\n";
+#print "Reads in $ARGV[0]: $count\n";
 
 # parse second file
 my $print = 0; my $crem = 0;
@@ -189,9 +189,9 @@ foreach my $re (sort keys %seq) {
 }
 close OUT;
 
-print "Reads in $ARGV[1]: $count",
-  "\nReads printed to $ARGV[2]: $print";
-print "\nReads removed for being chimeras: $crem" if ($chim);
-print "\nReads removed for not having both primers: $brem" if ($bth);
-print "\nReads removed for being lower quality: $qrem" if ($qul);
-print "\n";
+#print "Reads in $ARGV[1]: $count",
+#  "\nReads printed to $ARGV[2]: $print";
+#print "\nReads removed for being chimeras: $crem" if ($chim);
+#print "\nReads removed for not having both primers: $brem" if ($bth);
+#print "\nReads removed for being lower quality: $qrem" if ($qul);
+#print "\n";

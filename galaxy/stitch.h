@@ -21,6 +21,7 @@
 #define DOVEOPT     "-d"
 #define DOVEFILE    "-dl"
 #define MAXOPT      "-n"
+#define VERBOSE     "-ve"
 
 // default parameter values
 #define DEFOVER     20
