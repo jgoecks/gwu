@@ -41,7 +41,6 @@ while (my $line = <IN>) {
   $count++;
 }
 close IN;
-print "Reads in $ARGV[0]: $count\n";
 
 # produce output file from second fastq
 my $print = 0;
@@ -58,4 +57,3 @@ while (my $line = <FQ>) {
 }
 close FQ;
 close OUT;
-print "Reads printed to $ARGV[2]: $print\n";
