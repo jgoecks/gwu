@@ -29,6 +29,7 @@ void usage(void) {
   fprintf(stderr, "                (after any window truncations)\n");
   fprintf(stderr, "  %s          Option to trim reads only at 5' end\n", FIVEOPT);
   fprintf(stderr, "  %s          Option to trim reads only at 3' end\n", THREEOPT);
+  fprintf(stderr, "  %s         Option to print counts of results to stdout\n", VERBOSE);
   exit(-1);
 }
 
@@ -170,7 +171,7 @@ int checkQual(char* line, int st, int end, float avg) {
  * Control the I/O.
  */
 void readFile(FILE* in, FILE* out, int len, float qual,
-    float avg, int minLen, int opt5, int opt3) {
+    float avg, int minLen, int opt5, int opt3, int verbose) {
   char* head = (char*) memalloc(MAX_SIZE);
   char* seq = (char*) memalloc(MAX_SIZE);
   char* line = (char*) memalloc(MAX_SIZE);
@@ -217,8 +218,10 @@ void readFile(FILE* in, FILE* out, int len, float qual,
       elim++;
   }
 
-  printf("Reads printed: %d\nReads eliminated: %d\n",
-    count, elim);
+  if (verbose)
+    printf("Reads printed: %d\nReads eliminated: %d\n",
+      count, elim);
+
   free(seq);
   free(line);
   free(head);
@@ -252,6 +255,7 @@ void getParams(int argc, char** argv) {
 
   char* outFile = NULL, *inFile = NULL;
   int windowLen = 0, minLen = 0, opt5 = 1, opt3 = 1;
+  int verbose = 0;
   float windowAvg = 0.0f, qualAvg = 0.0f;
 
   // parse argv
@@ -262,6 +266,8 @@ void getParams(int argc, char** argv) {
       opt3 = 0;
     else if (!strcmp(argv[i], THREEOPT))
       opt5 = 0;
+    else if (!strcmp(argv[i], VERBOSE))
+      verbose = 1;
     else if (i < argc - 1) {
       if (!strcmp(argv[i], OUTFILE))
         outFile = argv[++i];
@@ -287,7 +293,7 @@ void getParams(int argc, char** argv) {
   FILE* out = NULL, *in = NULL;
   openFiles(outFile, &out, inFile, &in);
   readFile(in, out, windowLen, windowAvg, qualAvg,
-    minLen, opt5, opt3);
+    minLen, opt5, opt3, verbose);
 
   if (fclose(out) || fclose(in))
     exit(error("", ERRCLOSE));

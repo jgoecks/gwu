@@ -18,6 +18,7 @@
 #define MINLEN      "-n"   // minimum length of a read
 #define FIVEOPT     "-5"   // option to trim only at 5' end
 #define THREEOPT    "-3"   // option to trim only at 3' end
+#define VERBOSE     "-ve"  // option to print counts to stdout
 
 // error messages
 #define ERROPEN     0
