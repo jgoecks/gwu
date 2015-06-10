@@ -1,12 +1,17 @@
-<tool id="filtersam" name="Edit a SAM file">
+<tool id="editsam" name="Edit a SAM file">
   <description> of alternative mappings and length-variant realignments</description>
-  <command interpreter="perl">
-    filterSAM.pl $fastq $bed $alt $sam $out
+  <command>
+    checkAltMapping.pl $fastq $sam $prim $bed ${gen.fields.path} temp $pct
+    #if str( $log_opt ) == "true":
+      $align_log
+    #end if
+    ;
 
-    #if str($realign.realign_selector) == "yes":
+    filterSAM.pl $fastq $bed temp $sam $out
+    #if str( $realign.realign_opt ) == "yes":
       ${realign.real}
-      #if str($realign.log_opt) == "true":
-        $log
+      #if str( $realign.realignlog_opt ) == "true":
+        $realign_log
       #else
         None
       #end if
@@ -15,52 +20,60 @@
 
   </command>
   <inputs>
-    <param format="fastq" name="fastq" type="data" label="Reads that have been mapped" help="Must have removed-primer information in the header, of the format produced by the tool &quot;Remove PCR primers&quot;."/>
+    <param format="fastq" name="fastq" type="data" label="Reads that have been mapped" help="Must have removed-primer information in the header, of the format produced by the tool &quot;Remove PCR primers&quot;. Other than primer removal, no other truncations of the reads should have occurred (e.g. quality-based trimming)."/>
     <param format="sam" name="sam" type="data" label="Mapping file" help="Should be unsorted; each read's mapping(s) (primary and secondary) should be listed consecutively. No supplementary alignments are allowed. Soft-clipping (local alignments) should be avoided as well. Should contain optional fields &quot;AS&quot; (alignment score) and &quot;XM&quot; (number of substitutions) (Bowtie2-style format)."/>
+    <param format="csv" name="prim" type="data" label="File listing primer and target sequences" help="Of the format produced by the tool &quot;Retrieve primers and target sequences&quot;"/>
     <param format="bed" name="bed" type="data" label="File listing primer locations"/>
-    <param format="tabular" name="alt" type="data" label="File listing alternative mapping judgments" help="Output from the tool &quot;Check alternative mappings&quot;"/>
+
+    <param format="fasta" name="gen" type="select" label="Reference genome">
+      <options from_data_table="all_fasta"/>
+    </param>
+    <param name="pct" type="float" value="0.75" min="0" max="1" label="Primer match score threshold (0-1)" help="Primer scores of at least this value will be considered a match. See &quot;Primer matching score&quot; below for more information."/>
+    <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like a log file that lists primer-genome alignments and scores?"/>
+
     <conditional name="realign">
-      <param name="realign_selector" type="select" label="Would you like the SAM to be edited for length variants?">
+      <param name="realign_opt" type="select" label="Would you like the SAM to be edited for length variants?">
         <option value="no" selected="True">No</option>
         <option value="yes">Yes</option>
       </param>
       <when value="yes">
         <param format="tabular" name="real" type="data" label="Aligned length-variant reads" help="Alignments output from the tool &quot;Align length-variant reads&quot;"/>
         <param name="pct" type="float" value="0.75" min="0" max="1" label="Maximum primer match score threshold for external in/dels (0-1)" help="Primer scores above this value will be considered good enough matches to explain the length variant as an artifact. See &quot;External in/dels&quot; and &quot;Primer matching score&quot; sections below for more information."/>
-        <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like a log file of the realignments?"/>
+        <param name="realignlog_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like a log file of the realignments?"/>
       </when>
       <when value="no"/>
     </conditional>
 
   </inputs>
+
   <outputs>
     <data format="sam" name="out" label="${tool.name} on ${on_string}: edited SAM file"/>
-    <data format="tabular" name="log" label="${tool.name} on ${on_string}: realignment log file">
-      <filter>realign['realign_selector'] == "yes" and realign['log_opt'] is True</filter>
+    <data format="tabular" name="align_log" label="${tool.name} on ${on_string}: primer-genome scoring log file">
+      <filter>log_opt is True</filter>
+    </data>
+    <data format="tabular" name="realign_log" label="${tool.name} on ${on_string}: realignment log file">
+      <filter>realign['realign_opt'] == "yes" and realign['realignlog_opt'] is True</filter>
     </data>
   </outputs>
 
   <help>
-This tool produces a SAM file that has been edited with respect to 
-alternative mappings. It can further edit the SAM file using
-length-variant realignments.
+This tool checks read alignments that are to locations other than what is
+expected, given the primers removed from the read. It compares the regions
+corresponding to where the primers would have bound at that alternative site
+to the actual primer sequences (see *Primer matching score* below). All such
+alternative mappings (primary and secondary) that are judged as not legitimate
+are removed from the SAM file.
 
------
-
-**Alternative mappings**
-
-This tool uses the output from the tool *Check alternative mappings* to
-evaluate read mappings to locations other than expected. All such alternative
-mappings (primary and secondary) that were judged as not legitimate are
-removed from the SAM file.
-
-In addition, if a secondary mapping to the correct location is equivalent
+In addition, if a secondary mapping to the expected location is equivalent
 (based on alignment score) to the primary mapping, the secondary map is
 promoted to primary. This is because both Bowtie2 and BWA, when they find two
 (or more) equivalent maps for a read, randomly choose one as primary. This
-tool selects the correct location as the primary map, in order to provide
+tool selects the expected location as the primary map, in order to provide
 consistency to the SAM file. Of course, this does not mean that the read
 definitely originated from this location as opposed to the alternative.
+
+This tool can further edit the SAM file for length-variant realignments
+(see below).
 
 -----
 
@@ -113,7 +126,7 @@ Legitimate realignments of reads with external in/dels are given precedence
 over equivalent mappings in the original mapping file. This is because
 external in/dels are unlikely to lead to variant calls by a conventional
 approach. With an external deletion, the gap would not be apparent to a read
-mapper, and an external insertion may be a matching repeat.
+aligner, and an external insertion may be a matching repeat.
 
 -----
 

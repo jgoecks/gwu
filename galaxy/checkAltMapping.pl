@@ -164,9 +164,9 @@ while (my $line = <FQ>) {
   }
 }
 close FQ;
-print "Reads: $count\n";
-print "Unique: ", scalar keys %amp,
-  "\nDuplicates: $cdup\n";
+#print "Reads: $count\n";
+#print "Unique: ", scalar keys %amp,
+#  "\nDuplicates: $cdup\n";
 %seq = ();
 
 # parse SAM, analyze alternative mapping locations
@@ -379,9 +379,9 @@ while ($line) {
 }
 close SAM;
 close LOG if (scalar @ARGV > 7);
-print "Reads analyzed: $count",
-  "\nUnmapped: $un",
-  "\n";
+#print "Reads analyzed: $count",
+#  "\nUnmapped: $un",
+#  "\n";
 
 # print output
 print OUT "#Amplicon\tPrimersRemoved\tStrand\tChrom\tPosition(s)\tMatch?\n";

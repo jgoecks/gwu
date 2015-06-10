@@ -141,9 +141,9 @@ while (my $line = <FQ>) {
   }
 }
 close FQ;
-print "Reads: $count\n";
-print "Unique: ", scalar keys %amp,
-  "\nDuplicates: $cdup\n";
+#print "Reads: $count\n";
+#print "Unique: ", scalar keys %amp,
+#  "\nDuplicates: $cdup\n";
 %seq = ();
 
 # load alternative site information
@@ -195,8 +195,8 @@ if (scalar @ARGV > 5) {
     $aln{$read} = join("\t", @spl);
   }
   close ALN;
-  print "Total realignments: $total\n",
-    "Valid realignments: ", scalar keys %aln, "\n";
+  #print "Total realignments: $total\n",
+  #  "Valid realignments: ", scalar keys %aln, "\n";
 }
 
 # parse SAM, produce filtered file
@@ -465,12 +465,12 @@ if (scalar @ARGV > 6) {
   close LOG;
 }
 
-print "Reads analyzed: $count\n",
-  "  (Previously unmapped: $un)\n",
-  "Post-filtering unmapped: $ct\n",
-  "Post-filtering mapped: $mapped\n";
-print "Total realignments: $real\n",
-  "  Primary maps: $pral\n" if (scalar @ARGV > 5);
+#print "Reads analyzed: $count\n",
+#  "  (Previously unmapped: $un)\n",
+#  "Post-filtering unmapped: $ct\n",
+#  "Post-filtering mapped: $mapped\n";
+#print "Total realignments: $real\n",
+#  "  Primary maps: $pral\n" if (scalar @ARGV > 5);
 
 # reverse-complement a sequence
 sub revComp {

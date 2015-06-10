@@ -83,6 +83,9 @@ incorrectly with a series of SNPs. By reporting such alignments as external,
 this tool ensures that the tool *Edit a SAM file* will give preference to
 them over equivalent mappings.
 
+The alignments of reads with external deletions have an extra base appended
+to them, to ensure that the deletion is recognized by a variant caller.
+
 -----
 
 **Primer matching score**

@@ -12,8 +12,6 @@
     <param format="fastqsanger" name="in" type="data" label="FASTQ file" help="Must be of datatype &quot;fastqsanger&quot;"/>
     <param name="l" type="integer" value="0" min="0" label="Length of window of quality scores to examine"/>
     <param name="q" type="float" value="0" min="0" label="Minimum average quality for the window"/>
-    <param name="t" type="float" value="0" min="0" label="Minimum average quality for the full-length read" help="After any window-based truncations"/>
-    <param name="n" type="integer" value="0" min="0" label="Minimum read length" help="After any window-based truncations"/>
     <conditional name="trim">
       <param name="trim_opt" type="select" label="How would you like the window-based trimming to be performed?">
         <option value="both" selected="True">Trim both ends</option>
@@ -24,6 +22,8 @@
       <when value="five"/>
       <when value="three"/>
     </conditional>
+    <param name="t" type="float" value="0" min="0" label="Minimum average quality for the full-length read" help="After any window-based truncations"/>
+    <param name="n" type="integer" value="0" min="0" label="Minimum read length" help="After any window-based truncations"/>
   </inputs>
   <outputs>
     <data format="fastqsanger" name="out" label="${tool.name} on ${on_string}"/>
