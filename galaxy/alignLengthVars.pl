@@ -4,8 +4,6 @@
 # Nov. 2014
 
 # Align length variants to genomic segments.
-# Version 2: adding one base of the primer for reads
-#   with external in/dels.
 
 use strict;
 use warnings;
