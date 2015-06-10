@@ -114,8 +114,8 @@ while (my $line = <FQ>) {
   $qual{$read} = $line;
 }
 close FQ;
-print "Reads loaded: $count\n",
-  "Unique reads: $uniq\n";
+#print "Reads loaded: $count\n",
+#  "Unique reads: $uniq\n";
 
 # align reads to genomic segments
 print LOG "Amplicon\tReads\tScore\tCIGAR(s)\tSequence\tReads"

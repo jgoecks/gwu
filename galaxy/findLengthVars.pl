@@ -121,7 +121,7 @@ while (my $line = <IN>) {
 }
 close IN;
 
-print "Reads analyzed: $count\n";
+#print "Reads analyzed: $count\n";
 
 # print output -- only variants
 print OUT "#Amplicon\tExpected\tVarLength\tPercent\n";
