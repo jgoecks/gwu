@@ -97,12 +97,17 @@ are given as 'H'. The FASTQ headers include the amplicon name and the correct
 origin (chromosome and position) of the reads. For example, given the following
 ipcress record::
 
-  ipcress: chr8 CEG_2 105 A 29588649 2 B 29588754 0 forward
+  ipcress: chr3 CEG_2 106 A 109432405 2 B 109432493 0 forward
 
-a simulated 85bp read would be::
+a set of simulated, paired-end 85bp reads would be::
 
-  @read10943 amp=CEG_2 ref=chr8 pos=29588649 len=105 str=+
-  AGTTTTTACTGTGTGCCAGGCACTGCTCTAAGCACCTCACATGAATTAGGACACTGTGTCTTCAAAACTACTCTTTCAGGTAGGT
+  @read0 amp=CEG_2 ref=chr3 pos=109432405 len=106 str=+
+  CCAGGGAAAATTTGCTGATGTTCCAGAATATTCTTAGTTATTAAATTCTAGCAGGTGACCATAAACAAATAGCTTCATTTATTCA
+  +
+  HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
+
+  @read0 amp=CEG_2 ref=chr3 pos=109432405 len=106 str=+
+  CCCCCTCTACTTTTTACCTTTCTTGAATAAATGAAGCTATTTGTTTATGGTCACCTGCTAGAATTTAATAACTAAGAATATTCTG
   +
   HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 
@@ -121,17 +126,17 @@ like in a VCF file), reference base(s), and variant base(s), all tab-delimited.
 The variants should be listed in primitive style (no MNPs or complex variants).
 For example::
 
-  chr3   115251319    C    T
-  chr7   56436164     TG   T
-  chr17  231994       A    AACCTCCG
+  chr3    109432461   T    C
+  chr17   41343130    GC   G
+  chrX    111077593   A    AACCTCCG
 
 The simulator will complain if the reference base(s) do not match the
 genome sequence.
 
 The FASTQ header lists the variant(s) in the read::
 
-  @read41343 amp=BHRVBB_1 ref=chr17 pos=231959 len=99 str=+ var=231994,A>AACCTCCG;
-  GAATAGTACTCTAACATCATTTGGCTGAGGTTTAAAACCTCCGCAAGGGAGCAGCATCTGCACAAGGTGAGCACTCATCAGTGTT
+  @read0 amp=CEG_2 ref=chr3 pos=109432405 len=106 str=+ var=109432461,T>C;
+  CCAGGGAAAATTTGCTGATGTTCCAGAATATTCTTAGTTATTAAATTCTAGCAGGCGACCATAAACAAATAGCTTCATTTATTCA
   +
   HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH
 

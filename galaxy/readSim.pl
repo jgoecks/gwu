@@ -29,9 +29,9 @@ sub usage {
                  should list chromosome, position, reference, and alternate
                  (tab-delimited), with alleles in VCF-primitive style (no MNPs
                  or complex variants).  For example:
-                   chr3    109432461    T     TC
-                   chr17   41343126     C     A
-                   chrX    111077593    GAT   G
+                   chr3    109432461   T    C
+                   chr17   41343130    GC   G
+                   chrX    111077593   A    AACCTCCG
     <percent>  Percent of reads to make variants from <infile4> (def. 10)
 );
   exit;
