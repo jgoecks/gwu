@@ -5,7 +5,6 @@
 
 # Filter a VCF file, limiting variants to specified
 #   target regions.
-# Version 2: considering MNPs
 
 use strict;
 use warnings;
@@ -122,5 +121,5 @@ while (my $line = <IN>) {
 close IN;
 close OUT;
 
-print "Variants in $ARGV[0]: $var\n",
-  "Filtered variants in $ARGV[2]: $good\n";
+#print "Variants in $ARGV[0]: $var\n",
+#  "Filtered variants in $ARGV[2]: $good\n";
