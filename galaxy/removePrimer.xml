@@ -64,7 +64,7 @@
             <option value="yes">Yes</option>
           </param>
           <when value="yes">
-            <param name="rl" type="integer" value="0" min="0" label="Length of the second primer to search for (internal matching)" help="Choosing a large value (e.g. 100) will ensure full-length matching regardless of primer length."/>
+            <param name="rl" type="integer" value="100" min="1" label="Length of the second primer to search for (internal matching)" help="Choosing a large value (e.g. 100) will ensure full-length matching regardless of primer length."/>
             <param name="el" type="integer" value="0" min="0" label="Mismatches to the second primer to allow (internal matching)"/>
           </when>
           <when value="no"/>

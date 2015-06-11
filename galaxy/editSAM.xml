@@ -48,7 +48,7 @@
 
   <outputs>
     <data format="sam" name="out" label="${tool.name} on ${on_string}: edited SAM file"/>
-    <data format="tabular" name="align_log" label="${tool.name} on ${on_string}: primer-genome scoring log file">
+    <data format="tabular" name="align_log" label="${tool.name} on ${on_string}: primer-genome alignments log file">
       <filter>log_opt is True</filter>
     </data>
     <data format="tabular" name="realign_log" label="${tool.name} on ${on_string}: realignment log file">
