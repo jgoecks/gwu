@@ -1,21 +1,22 @@
 <tool id="readsim" name="Simulate paired-end reads">
   <description> for a set of amplicons</description>
   <command interpreter="perl">
-    readSim.pl $ipc $prim ${gen.fields.path} $out1 $out2
+    readSim.pl "$ipc" "$prim" "$gen.fields.path" "$out1" "$out2"
 
     ## optional parameters
-    #if str($opt.opt_selector) == "yes":
-      ${opt.num} ${opt.len} ${opt.score} ${opt.lengths}
+    #if str( $opt.opt_selector ) == "yes":
+      "$opt.num" "$opt.len" "$opt.score" "$opt.lengths"
 
-      #if str($opt.bedsel.bed_selector) == "yes":
-        ${opt.bedsel.bed}
+      #if str( $opt.bedsel.bed_selector ) == "yes":
+        "$opt.bedsel.bed"
       #end if
-      #if str($opt.varsel.var_selector) == "yes":
-        #if str($opt.bedsel.bed_selector) == "no":
+      #if str( $opt.varsel.var_selector ) == "yes":
+        #if str( $opt.bedsel.bed_selector ) == "no":
           None
         #end if
-        ${opt.varsel.var} ${opt.varsel.pct}
+        "$opt.varsel.var" "$opt.varsel.pct"
       #end if
+
     #end if
 
   </command>

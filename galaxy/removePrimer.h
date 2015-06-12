@@ -56,6 +56,9 @@
 #define MERRBED     "cannot load value from BED file"
 #define ERRBEDA     10
 #define MERRBEDA    ": error determining length from BED file"
+#define ERRINVAL    11
+#define MERRINVAL   ": invalid parameter or usage"
+#define DEFERR      "Unknown error"
 
 typedef struct primer {
   char* name;

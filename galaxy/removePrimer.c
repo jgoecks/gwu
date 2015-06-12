@@ -67,28 +67,19 @@ void usage(void) {
  */
 int error(char* msg, int err) {
   char* msg2;
-  if (err == ERROPEN)
-    msg2 = MERROPEN;
-  else if (err == ERRCLOSE)
-    msg2 = MERRCLOSE;
-  else if (err == ERROPENW)
-    msg2 = MERROPENW;
-  else if (err == ERRUNK)
-    msg2 = MERRUNK;
-  else if (err == ERRMEM)
-    msg2 = MERRMEM;
-  else if (err == ERRSEQ)
-    msg2 = MERRSEQ;
-  else if (err == ERRPRIM)
-    msg2 = MERRPRIM;
-  else if (err == ERRPREP)
-    msg2 = MERRPREP;
-  else if (err == ERRINT)
-    msg2 = MERRINT;
-  else if (err == ERRBED)
-    msg2 = MERRBED;
-  else if (err == ERRBEDA)
-    msg2 = MERRBEDA;
+  if (err == ERROPEN) msg2 = MERROPEN;
+  else if (err == ERRCLOSE) msg2 = MERRCLOSE;
+  else if (err == ERROPENW) msg2 = MERROPENW;
+  else if (err == ERRUNK) msg2 = MERRUNK;
+  else if (err == ERRMEM) msg2 = MERRMEM;
+  else if (err == ERRSEQ) msg2 = MERRSEQ;
+  else if (err == ERRPRIM) msg2 = MERRPRIM;
+  else if (err == ERRPREP) msg2 = MERRPREP;
+  else if (err == ERRINT) msg2 = MERRINT;
+  else if (err == ERRBED) msg2 = MERRBED;
+  else if (err == ERRBEDA) msg2 = MERRBEDA;
+  else if (err == ERRINVAL) msg2 = MERRINVAL;
+  else msg2 = DEFERR;
 
   fprintf(stderr, "Error! %s%s\n", msg, msg2);
   return -1;
@@ -459,38 +450,22 @@ void openFiles(char* outFile, FILE** out,
  */
 char rc(char in) {
   char out;
-  if (in == 'A')
-    out = 'T';
-  else if (in == 'T')
-    out = 'A';
-  else if (in == 'C')
-    out = 'G';
-  else if (in == 'G')
-    out = 'C';
-  else if (in == 'Y')
-    out = 'R';
-  else if (in == 'R')
-    out = 'Y';
-  else if (in == 'W')
-    out = 'W';
-  else if (in == 'S')
-    out = 'S';
-  else if (in == 'K')
-    out = 'M';
-  else if (in == 'M')
-    out = 'K';
-  else if (in == 'B')
-    out = 'V';
-  else if (in == 'V')
-    out = 'B';
-  else if (in == 'D')
-    out = 'H';
-  else if (in == 'H')
-    out = 'D';
-  else if (in == 'N')
-    out = 'N';
-  else
-    exit(error("", ERRPRIM));
+  if (in == 'A') out = 'T';
+  else if (in == 'T') out = 'A';
+  else if (in == 'C') out = 'G';
+  else if (in == 'G') out = 'C';
+  else if (in == 'Y') out = 'R';
+  else if (in == 'R') out = 'Y';
+  else if (in == 'W') out = 'W';
+  else if (in == 'S') out = 'S';
+  else if (in == 'K') out = 'M';
+  else if (in == 'M') out = 'K';
+  else if (in == 'B') out = 'V';
+  else if (in == 'V') out = 'B';
+  else if (in == 'D') out = 'H';
+  else if (in == 'H') out = 'D';
+  else if (in == 'N') out = 'N';
+  else exit(error("", ERRPRIM));
   return out;
 }
 
@@ -653,9 +628,10 @@ void getParams(int argc, char** argv) {
         revLMis = getInt(argv[++i]);
       else if (!strcmp(argv[i], CORRFILE))
         corrFile = argv[++i];
-    }
-    else
-      usage();
+      else
+        exit(error(argv[i], ERRINVAL));
+    } else
+      exit(error(argv[i], ERRINVAL));
   }
 
   if (outFile == NULL || inFile == NULL || primFile == NULL)

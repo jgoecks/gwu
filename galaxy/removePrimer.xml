@@ -1,30 +1,34 @@
 <tool id="removeprimer" name="Remove PCR primers">
   <description> from a set of reads</description>
   <command>
-    removePrimer -i $in -p $prim -o $out $require
+    removePrimer -i "$in" -p "$prim" -o "$out" $require
 
     ## output files
-    #if str($output.output_selector) == "yes":
-      #if str($output.log_opt) == "true":
-        -l $log
+    #if str( $output.output_selector ) == "yes":
+      #if str( $output.log_opt ) == "true":
+        -l "$log"
       #end if
-      #if str($output.nonmatch_opt) == "true":
-        -w $nonmatch
+      #if str( $output.nonmatch_opt ) == "true":
+        -w "$nonmatch"
       #end if
-      #if str($output.correct_opt) == "true":
-        -c $corr
+      #if str( $output.correct_opt ) == "true":
+        -c "$corr"
       #end if
     #end if
 
     ## matching parameters
-    #if str($extended.extended_selector) == "yes":
-      -ef "${extended.ef}" -fp "${extended.fp}" 
-      -er "${extended.er}" -rp "${extended.rp}"
-      #if str($extended.internal.internal_selector) == "yes":
-        -el "${extended.internal.el}" -rl "${extended.internal.rl}"
+    #if str( $extended.extended_selector ) == "yes":
+      -ef "$extended.ef"
+      -fp "$extended.fp" 
+      -er "$extended.er"
+      -rp "$extended.rp"
+      #if str( $extended.internal.internal_selector ) == "yes":
+        -el "$extended.internal.el"
+        -rl "$extended.internal.rl"
       #end if
-      #if str($extended.bedlength.bedlength_selector) == "yes":
-        -b "${extended.bedlength.bed}" -bp "${extended.bedlength.bp}"
+      #if str( $extended.bedlength.bedlength_selector ) == "yes":
+        -b "$extended.bedlength.bed"
+        -bp "$extended.bedlength.bp"
       #end if
     #end if
 
@@ -54,9 +58,9 @@
       </param>
       <when value="yes">
         <param name="ef" type="integer" value="0" min="0" label="Mismatches to the first primer to allow"/>
-        <param name="fp" type="text" value="0" label="Position (or range of positions) at which to begin searching for the first primer" help="Default of 0 means the search will begin at the first base of each read only. Specifying a range such as -1,1 (comma-separated, no spaces) will allow the first primer to match starting at positions -1, 0, or 1."/>
+        <param name="fp" type="text" value="0" label="Position (or range of positions) at which to begin searching for the first primer" help="Default of 0 means the search will begin at the first base of each read only. Specifying a range such as -1,1 (comma-separated) will allow the first primer to match starting at positions -1, 0, or 1."/>
         <param name="er" type="integer" value="0" min="0" label="Mismatches to the second primer to allow for full-length 3' end matching"/>
-        <param name="rp" type="text" value="0" label="Position (or range of positions) at which to begin searching for the second primer for full-length 3' end matching" help="Default of 0 means the search will begin at the last base of each read only. Specifying a range such as -1,1 (comma-separated, no spaces) will allow the second primer to match starting at positions -1, 0, or 1 with respect to the last base."/>
+        <param name="rp" type="text" value="0" label="Position (or range of positions) at which to begin searching for the second primer for full-length 3' end matching" help="Default of 0 means the search will begin at the last base of each read only. Specifying a range such as -1,1 (comma-separated) will allow the second primer to match starting at positions -1, 0, or 1 with respect to the last base."/>
 
         <conditional name="internal">
           <param name="internal_selector" type="select" label="Would you like the program to search for internal matches of the second primer?">
@@ -77,7 +81,7 @@
           </param>
           <when value="yes">
             <param format="bed" name="bed" type="data" label="File listing primer locations"/>
-            <param name="bp" type="text" value="0" label="Position (or range of positions) at which to begin searching for the second primer based on expected length" help="Default of 0 means the search will begin at the expected length only. Specifying a range such as -1,1 (comma-separated, no spaces) will allow the second primer to match starting at positions -1, 0, or 1 with respect to the expected length."/>
+            <param name="bp" type="text" value="0" label="Position (or range of positions) at which to begin searching for the second primer based on expected length" help="Default of 0 means the search will begin at the expected length only. Specifying a range such as -1,1 (comma-separated) will allow the second primer to match starting at positions -1, 0, or 1 with respect to the expected length."/>
           </when>
           <when value="no"/>
         </conditional>

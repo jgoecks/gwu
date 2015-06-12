@@ -1,25 +1,21 @@
 <tool id="stitch" name="Stitch">
   <description> together paired-end reads</description>
   <command>
-    stitch -1 $in1 -2 $in2 -o $out -m $overlap -p $pct
+    stitch -1 "$in1" -2 "$in2" -o "$out" -m "$overlap" -p "$pct" $short_opt
 
-    #if str($dove_opt) == "true":
+    #if str( $dove_opt ) == "true":
       -d
-      #if str($dovelog_opt) == "true":
-        -dl $dovelog
+      #if str( $dovelog_opt ) == "true":
+        -dl "$dovelog"
       #end if
     #end if
 
-    #if str($short_opt) == "true":
-      -n
+    #if str( $un_opt ) == "true":
+      -u1 "$un1" -u2 "$un2"
     #end if
 
-    #if str($un_opt) == "true":
-      -u1 $un1 -u2 $un2
-    #end if
-
-    #if str($log_opt) == "true":
-      -l $log
+    #if str( $log_opt ) == "true":
+      -l "$log"
     #end if
 
   </command>
@@ -30,7 +26,7 @@
     <param name="overlap" type="integer" value="20" min="0" label="Minimum overlap of the paired-end reads"/>
     <param name="pct" type="float" value="0" min="0" max="1" label="Mismatches to allow in the overlapped region" help="A fraction of the overlap length. For example, a value of 0.05 means that up to 5% of the overlapping bases can be mismatches. 'N's do not count as mismatches (see &quot;Ambiguous bases&quot; below)."/>
     <param name="dove_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like to check for dovetailing of the reads?" help="Using the same minimum overlap (selected above)"/>
-    <param name="short_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like to produce the shortest stitched read possible?" help="For reads with multiple overlapping possibilities. By default, the longest stitched read is produced."/>
+    <param name="short_opt" type="boolean" truevalue="-n" falsevalue="" checked="false" label="Would you like to produce the shortest stitched read possible?" help="For reads with multiple overlapping possibilities. By default, the longest stitched read is produced."/>
     <param name="un_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like output files listing stitch failures?"/>
     <param name="log_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like an output log file?"/>
     <param name="dovelog_opt" type="boolean" truevalue="true" falsevalue="false" checked="false" label="Would you like an output log file for the dovetailed reads?" help="Created only if checking for dovetailing"/>

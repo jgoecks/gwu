@@ -1,21 +1,21 @@
 <tool id="editsam" name="Edit a SAM file">
   <description> of alternative mappings and length-variant realignments</description>
   <command>
-    checkAltMapping.pl $fastq $sam $prim $bed ${gen.fields.path} temp $pct
+    checkAltMapping.pl "$fastq" "$sam" "$prim" "$bed" "$gen.fields.path" temp "$pct"
     #if str( $log_opt ) == "true":
-      $align_log
+      "$align_log"
     #end if
     ;
 
-    filterSAM.pl $fastq $bed temp $sam $out
+    filterSAM.pl "$fastq" "$bed" temp "$sam" "$out"
     #if str( $realign.realign_opt ) == "yes":
-      ${realign.real}
+      "$realign.real"
       #if str( $realign.realignlog_opt ) == "true":
-        $realign_log
+        "$realign_log"
       #else
         None
       #end if
-      ${realign.pct}
+      "$realign.pct"
     #end if
 
   </command>

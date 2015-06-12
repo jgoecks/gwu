@@ -1,7 +1,7 @@
 <tool id="getprimers" name="Retrieve primers and target sequences">
   <description> for a set of amplicons</description>
   <command interpreter="perl">
-    getPrimers.pl $bed ${gen.fields.path} $output
+    getPrimers.pl "$bed" "$gen.fields.path" "$output"
   </command>
   <inputs>
     <param format="bed" name="bed" type="data" label="File listing primer locations"/>

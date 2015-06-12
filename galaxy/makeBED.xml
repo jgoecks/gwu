@@ -1,7 +1,7 @@
 <tool id="makebed" name="Make a BED file">
   <description> using amplicon specifications</description>
   <command interpreter="perl">
-    makeBED.pl $in $out
+    makeBED.pl "$in" "$out"
   </command>
   <inputs>
     <param format="tabular" name="in" type="data" label="File listing amplicon specifications" help="Header line should contain columns &quot;Assay_Name&quot;, &quot;F-sp&quot;, &quot;R-sp&quot;, &quot;Chr&quot;, &quot;From&quot;, and &quot;To&quot;."/>

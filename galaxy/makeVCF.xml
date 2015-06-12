@@ -16,15 +16,14 @@
         mv temp1 "$out"
       #end if
 
-    #else
-      #if str( $addhp.addhp_opt ) == "yes":
-        addHPtoVCF.pl temp0 "$addhp.gen.fields.path" "$out"
-        #if str( $addhp.log_opt ) == "true":
-          "$log"
-        #end if
-      #else
-        mv temp0 "$out"
+    #elif str( $addhp.addhp_opt ) == "yes":
+      addHPtoVCF.pl temp0 "$addhp.gen.fields.path" "$out"
+      #if str( $addhp.log_opt ) == "true":
+        "$log"
       #end if
+
+    #else
+      mv temp0 "$out"
     #end if
 
   </command>
