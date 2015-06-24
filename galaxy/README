@@ -25,7 +25,8 @@ where
    <BED> is the file listing the locations of the PCR primers used for targeting,
            in BED format;
    <GEN> is the reference genome, in FASTA format;
-   <IDX> is the Bowtie2-index prefix (if not available, they will be generated);
+   <IDX> is the Bowtie2-index prefix (if not available, the indexes will be
+           generated using <GEN>);
    <DIR> is the directory for the output files.
 
 Choosing different parameters, or saving various intermediate files, can be
