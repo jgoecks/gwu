@@ -1,0 +1,529 @@
+{
+    "a_galaxy_workflow": "true", 
+    "annotation": "", 
+    "format-version": "0.1", 
+    "name": "Variant detection in amplicon-targeted sequencing", 
+    "steps": {
+        "0": {
+            "annotation": "", 
+            "id": 0, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "", 
+                    "name": "Input Dataset"
+                }
+            ], 
+            "label": null, 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 10, 
+                "top": 10
+            }, 
+            "tool_errors": null, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input Dataset\"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "user_outputs": [], 
+            "uuid": "428b8808-6fea-4f2b-9f74-f7ef041635db"
+        }, 
+        "1": {
+            "annotation": "", 
+            "id": 1, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "", 
+                    "name": "Input Dataset"
+                }
+            ], 
+            "label": null, 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 10, 
+                "top": 130
+            }, 
+            "tool_errors": null, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input Dataset\"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "user_outputs": [], 
+            "uuid": "366b22a5-c799-407c-9d7a-9beae09a3ec7"
+        }, 
+        "2": {
+            "annotation": "", 
+            "id": 2, 
+            "input_connections": {}, 
+            "inputs": [
+                {
+                    "description": "", 
+                    "name": "Input Dataset"
+                }
+            ], 
+            "label": null, 
+            "name": "Input dataset", 
+            "outputs": [], 
+            "position": {
+                "left": 10, 
+                "top": 250
+            }, 
+            "tool_errors": null, 
+            "tool_id": null, 
+            "tool_state": "{\"name\": \"Input Dataset\"}", 
+            "tool_version": null, 
+            "type": "data_input", 
+            "user_outputs": [], 
+            "uuid": "3f5f0e33-9c28-46b1-b36d-1cad69f69d52"
+        }, 
+        "3": {
+            "annotation": "", 
+            "id": 3, 
+            "input_connections": {
+                "bed": {
+                    "id": 2, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Retrieve primers and target sequences", 
+            "outputs": [
+                {
+                    "name": "output", 
+                    "type": "csv"
+                }
+            ], 
+            "position": {
+                "left": 230, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "getprimers", 
+            "tool_state": "{\"__page__\": 0, \"__rerun_remap_job_id__\": null, \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/?.len\\\"\", \"gen\": \"{\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"hg19\\\"}\", \"bed\": \"null\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "87128e30-8f4b-4497-9c0d-e09a0c087eb8"
+        }, 
+        "4": {
+            "annotation": "", 
+            "id": 4, 
+            "input_connections": {
+                "in1": {
+                    "id": 0, 
+                    "output_name": "output"
+                }, 
+                "in2": {
+                    "id": 1, 
+                    "output_name": "output"
+                }, 
+                "prim": {
+                    "id": 3, 
+                    "output_name": "output"
+                }, 
+                "single|removePrimer2|bed2|bedfile2": {
+                    "id": 2, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Preprocess reads", 
+            "outputs": [
+                {
+                    "name": "joined", 
+                    "type": "fastq"
+                }, 
+                {
+                    "name": "comb", 
+                    "type": "fastq"
+                }, 
+                {
+                    "name": "stitchlog", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "dovelog", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "removePrimerlog", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "removePrimer1log", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "removePrimer2log", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 450, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "preprocess", 
+            "tool_state": "{\"__page__\": 0, \"prim\": \"null\", \"stitch\": \"{\\\"short_opt\\\": \\\"False\\\", \\\"dove_opt\\\": \\\"True\\\", \\\"pct\\\": \\\"0.1\\\", \\\"stitchlog_opt\\\": \\\"False\\\", \\\"overlap\\\": \\\"20\\\", \\\"__current_case__\\\": 0, \\\"stitch_opt\\\": \\\"yes\\\", \\\"dovelog_opt\\\": \\\"False\\\"}\", \"removePrimer\": \"{\\\"fp\\\": \\\"-1,1\\\", \\\"rp\\\": \\\"-1,1\\\", \\\"rp_opt\\\": \\\"yes\\\", \\\"ef\\\": \\\"2\\\", \\\"bed\\\": {\\\"bed_opt\\\": \\\"no\\\", \\\"__current_case__\\\": 1}, \\\"internal\\\": {\\\"int_opt\\\": \\\"no\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 0, \\\"rplog_opt\\\": \\\"False\\\", \\\"er\\\": \\\"2\\\"}\", \"__rerun_remap_job_id__\": null, \"in1\": \"null\", \"in2\": \"null\", \"single\": \"{\\\"both\\\": \\\"True\\\", \\\"removePrimer2\\\": {\\\"rp2_opt\\\": \\\"yes\\\", \\\"rp2\\\": \\\"-1,1\\\", \\\"rp2log_opt\\\": \\\"False\\\", \\\"er2\\\": \\\"2\\\", \\\"require\\\": \\\"False\\\", \\\"internal2\\\": {\\\"el2\\\": \\\"1\\\", \\\"int2_opt\\\": \\\"yes\\\", \\\"__current_case__\\\": 0, \\\"rl2\\\": \\\"16\\\"}, \\\"bed2\\\": {\\\"bp2\\\": \\\"-1,1\\\", \\\"bed2_opt\\\": \\\"yes\\\", \\\"__current_case__\\\": 0, \\\"bedfile2\\\": null}, \\\"__current_case__\\\": 0, \\\"fp2\\\": \\\"-1,1\\\", \\\"ef2\\\": \\\"2\\\"}, \\\"qual\\\": \\\"True\\\", \\\"__current_case__\\\": 0, \\\"chim\\\": \\\"True\\\", \\\"single_opt\\\": \\\"yes\\\"}\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/?.len\\\"\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "8de34b52-c93c-4a0b-b1bc-be610d4f86b8"
+        }, 
+        "5": {
+            "annotation": "", 
+            "id": 5, 
+            "input_connections": {
+                "in": {
+                    "id": 4, 
+                    "output_name": "comb"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Quality filtering", 
+            "outputs": [
+                {
+                    "name": "out", 
+                    "type": "fastqsanger"
+                }
+            ], 
+            "position": {
+                "left": 670, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "qualtrim", 
+            "tool_state": "{\"trim\": \"{\\\"trim_opt\\\": \\\"both\\\", \\\"__current_case__\\\": 0}\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"l\": \"\\\"0\\\"\", \"n\": \"\\\"20\\\"\", \"q\": \"\\\"0.0\\\"\", \"t\": \"\\\"30.0\\\"\", \"in\": \"null\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/?.len\\\"\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "7a4ab195-5e37-449a-acb8-805619b560b4"
+        }, 
+        "6": {
+            "annotation": "", 
+            "id": 6, 
+            "input_connections": {
+                "bed": {
+                    "id": 2, 
+                    "output_name": "output"
+                }, 
+                "fastq": {
+                    "id": 4, 
+                    "output_name": "joined"
+                }, 
+                "prim": {
+                    "id": 3, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Align length-variant reads", 
+            "outputs": [
+                {
+                    "name": "out", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "log", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 670, 
+                "top": 130
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "lengthvars", 
+            "tool_state": "{\"__page__\": 0, \"prim\": \"null\", \"fastq\": \"null\", \"log_opt\": \"\\\"False\\\"\", \"bed\": \"null\", \"len\": \"\\\"5\\\"\", \"pct\": \"\\\"0.01\\\"\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/?.len\\\"\", \"__rerun_remap_job_id__\": null, \"genome\": \"{\\\"genome_opt\\\": \\\"yes\\\", \\\"gen\\\": {\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"hg19\\\"}, \\\"__current_case__\\\": 0}\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "dff211c6-b902-4edf-811d-f504ed90e8dc"
+        }, 
+        "7": {
+            "annotation": "", 
+            "id": 7, 
+            "input_connections": {
+                "library|input_1": {
+                    "id": 5, 
+                    "output_name": "out"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Bowtie2", 
+            "outputs": [
+                {
+                    "name": "output_unaligned_reads_l", 
+                    "type": "fastqsanger"
+                }, 
+                {
+                    "name": "output_unaligned_reads_r", 
+                    "type": "fastqsanger"
+                }, 
+                {
+                    "name": "output", 
+                    "type": "bam"
+                }, 
+                {
+                    "name": "output_sam", 
+                    "type": "sam"
+                }
+            ], 
+            "position": {
+                "left": 890, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/bowtie2/bowtie2/0.4", 
+            "tool_state": "{\"__page__\": 0, \"read_group\": \"{\\\"__current_case__\\\": 1, \\\"read_group_selector\\\": \\\"no\\\"}\", \"__rerun_remap_job_id__\": null, \"library\": \"{\\\"unaligned_file\\\": \\\"False\\\", \\\"type\\\": \\\"single\\\", \\\"__current_case__\\\": 0, \\\"input_1\\\": null}\", \"reference_genome\": \"{\\\"source\\\": \\\"indexed\\\", \\\"__current_case__\\\": 0, \\\"index\\\": {\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"hg19\\\"}}\", \"analysis_type\": \"{\\\"alignment_options\\\": {\\\"n_ceil\\\": \\\"L,0,0.15\\\", \\\"__current_case__\\\": 0, \\\"i\\\": \\\"S,1,0.50\\\", \\\"L\\\": \\\"18\\\", \\\"N\\\": \\\"1\\\", \\\"norc\\\": \\\"False\\\", \\\"nofw\\\": \\\"False\\\", \\\"align_mode\\\": {\\\"align_mode_selector\\\": \\\"end-to-end\\\", \\\"score_min_ete\\\": \\\"L,-0.6,-0.6\\\", \\\"__current_case__\\\": 0}, \\\"alignment_options_selector\\\": \\\"yes\\\", \\\"no_1mm_upfront\\\": \\\"False\\\", \\\"gbar\\\": \\\"4\\\", \\\"ignore_quals\\\": \\\"False\\\", \\\"dpad\\\": \\\"15\\\"}, \\\"effort_options\\\": {\\\"effort_options_selector\\\": \\\"yes\\\", \\\"R\\\": \\\"2\\\", \\\"D\\\": \\\"200\\\", \\\"__current_case__\\\": 0}, \\\"sam_options\\\": {\\\"sam_options_selector\\\": \\\"no\\\", \\\"__current_case__\\\": 1}, \\\"other_options\\\": {\\\"other_options_selector\\\": \\\"no\\\", \\\"__current_case__\\\": 1}, \\\"scoring_options\\\": {\\\"scoring_options_selector\\\": \\\"no\\\", \\\"__current_case__\\\": 1}, \\\"analysis_type_selector\\\": \\\"full\\\", \\\"reporting_options\\\": {\\\"k\\\": \\\"20\\\", \\\"reporting_options_selector\\\": \\\"k\\\", \\\"__current_case__\\\": 1}, \\\"__current_case__\\\": 1, \\\"sam_opt\\\": \\\"True\\\", \\\"input_options\\\": {\\\"input_options_selector\\\": \\\"no\\\", \\\"__current_case__\\\": 1}}\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/?.len\\\"\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "8ab54648-10a6-41ff-8e09-ab842f5e09b5"
+        }, 
+        "8": {
+            "annotation": "", 
+            "id": 8, 
+            "input_connections": {
+                "bed": {
+                    "id": 2, 
+                    "output_name": "output"
+                }, 
+                "fastq": {
+                    "id": 5, 
+                    "output_name": "out"
+                }, 
+                "prim": {
+                    "id": 3, 
+                    "output_name": "output"
+                }, 
+                "realign|real": {
+                    "id": 6, 
+                    "output_name": "out"
+                }, 
+                "sam": {
+                    "id": 7, 
+                    "output_name": "output_sam"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Edit a SAM file", 
+            "outputs": [
+                {
+                    "name": "out", 
+                    "type": "sam"
+                }, 
+                {
+                    "name": "align_log", 
+                    "type": "tabular"
+                }, 
+                {
+                    "name": "realign_log", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 1110, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "editsam", 
+            "tool_state": "{\"__page__\": 0, \"prim\": \"null\", \"sam\": \"null\", \"fastq\": \"null\", \"log_opt\": \"\\\"False\\\"\", \"pct\": \"\\\"0.75\\\"\", \"realign\": \"{\\\"real\\\": null, \\\"realignlog_opt\\\": \\\"False\\\", \\\"pct\\\": \\\"0.75\\\", \\\"__current_case__\\\": 0, \\\"realign_opt\\\": \\\"yes\\\"}\", \"__rerun_remap_job_id__\": null, \"bed\": \"null\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/hg19.len\\\"\", \"gen\": \"{\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"hg19\\\"}\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "6bda4f9d-80dd-4a66-8b02-1267902083a8"
+        }, 
+        "9": {
+            "annotation": "", 
+            "id": 9, 
+            "input_connections": {
+                "source|input1": {
+                    "id": 8, 
+                    "output_name": "out"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "SAM-to-BAM", 
+            "outputs": [
+                {
+                    "name": "output1", 
+                    "type": "bam"
+                }
+            ], 
+            "position": {
+                "left": 1330, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/sam_to_bam/sam_to_bam/1.1.4", 
+            "tool_state": "{\"source\": \"{\\\"index_source\\\": \\\"cached\\\", \\\"index\\\": {\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"hg19\\\"}, \\\"input1\\\": null, \\\"__current_case__\\\": 0}\", \"__rerun_remap_job_id__\": null, \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/hg19.len\\\"\", \"__page__\": 0}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "3bd02636-84c0-471d-95c7-8bddefbaf4b4"
+        }, 
+        "10": {
+            "annotation": "", 
+            "id": 10, 
+            "input_connections": {
+                "reference_source|input_bams_0|input_bam": {
+                    "id": 9, 
+                    "output_name": "output1"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "MPileup", 
+            "outputs": [
+                {
+                    "name": "output_mpileup", 
+                    "type": "pileup"
+                }, 
+                {
+                    "name": "output_log", 
+                    "type": "txt"
+                }
+            ], 
+            "position": {
+                "left": 1550, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/samtools_mpileup/samtools_mpileup/0.0.3", 
+            "tool_state": "{\"__page__\": 0, \"genotype_likelihood_computation_type\": \"{\\\"genotype_likelihood_computation_type_selector\\\": \\\"do_not_perform_genotype_likelihood_computation\\\", \\\"__current_case__\\\": 1}\", \"__rerun_remap_job_id__\": null, \"advanced_options\": \"{\\\"max_reads_per_bam\\\": \\\"100000\\\", \\\"advanced_options_selector\\\": \\\"advanced\\\", \\\"extended_BAQ_computation\\\": \\\"False\\\", \\\"region_string\\\": \\\"\\\", \\\"output_per_sample_strand_bias_p_value\\\": \\\"False\\\", \\\"minimum_base_quality\\\": \\\"0\\\", \\\"disable_probabilistic_realignment\\\": \\\"True\\\", \\\"skip_anomalous_read_pairs\\\": \\\"False\\\", \\\"minimum_mapping_quality\\\": \\\"0\\\", \\\"output_per_sample_read_depth\\\": \\\"False\\\", \\\"__current_case__\\\": 0, \\\"position_list\\\": null, \\\"coefficient_for_downgrading\\\": \\\"0\\\"}\", \"reference_source\": \"{\\\"ref_file\\\": {\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"hg19\\\"}, \\\"reference_source_selector\\\": \\\"cached\\\", \\\"input_bams\\\": [{\\\"__index__\\\": 0, \\\"input_bam\\\": null}], \\\"__current_case__\\\": 0}\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/hg19.len\\\"\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "2c7164b4-4176-44c0-ade6-83bce1dd8f9f"
+        }, 
+        "11": {
+            "annotation": "", 
+            "id": 11, 
+            "input_connections": {
+                "input": {
+                    "id": 10, 
+                    "output_name": "output_mpileup"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Varscan", 
+            "outputs": [
+                {
+                    "name": "output", 
+                    "type": "vcf"
+                }
+            ], 
+            "position": {
+                "left": 1770, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/varscan_version_2/varscan/0.1", 
+            "tool_state": "{\"strand_filter\": \"\\\"no\\\"\", \"min_coverage\": \"\\\"1\\\"\", \"cmd\": \"\\\"pileup2snp\\\"\", \"min_avg_qual\": \"\\\"30\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"sample_names\": \"\\\"\\\"\", \"min_freq_for_hom\": \"\\\"0.75\\\"\", \"min_var_freq\": \"\\\"0.01\\\"\", \"p_value\": \"\\\"0.99\\\"\", \"input\": \"null\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/hg19.len\\\"\", \"min_supporting_reads\": \"\\\"2\\\"\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "bd01491a-d142-4994-abe9-6cf0cfbc7630"
+        }, 
+        "12": {
+            "annotation": "", 
+            "id": 12, 
+            "input_connections": {
+                "input": {
+                    "id": 10, 
+                    "output_name": "output_mpileup"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Varscan", 
+            "outputs": [
+                {
+                    "name": "output", 
+                    "type": "vcf"
+                }
+            ], 
+            "position": {
+                "left": 1770, 
+                "top": 130
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "toolshed.g2.bx.psu.edu/repos/devteam/varscan_version_2/varscan/0.1", 
+            "tool_state": "{\"strand_filter\": \"\\\"no\\\"\", \"min_coverage\": \"\\\"1\\\"\", \"cmd\": \"\\\"pileup2indel\\\"\", \"min_avg_qual\": \"\\\"30\\\"\", \"__page__\": 0, \"__rerun_remap_job_id__\": null, \"sample_names\": \"\\\"\\\"\", \"min_freq_for_hom\": \"\\\"0.75\\\"\", \"min_var_freq\": \"\\\"0.01\\\"\", \"p_value\": \"\\\"0.99\\\"\", \"input\": \"null\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/hg19.len\\\"\", \"min_supporting_reads\": \"\\\"2\\\"\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "c60633a7-79b2-4c15-94c7-3227cd7bf474"
+        }, 
+        "13": {
+            "annotation": "", 
+            "id": 13, 
+            "input_connections": {
+                "filter|bed": {
+                    "id": 2, 
+                    "output_name": "output"
+                }, 
+                "ind": {
+                    "id": 12, 
+                    "output_name": "output"
+                }, 
+                "pil": {
+                    "id": 10, 
+                    "output_name": "output_mpileup"
+                }, 
+                "snp": {
+                    "id": 11, 
+                    "output_name": "output"
+                }
+            }, 
+            "inputs": [], 
+            "label": null, 
+            "name": "Construct a VCF", 
+            "outputs": [
+                {
+                    "name": "out", 
+                    "type": "vcf"
+                }, 
+                {
+                    "name": "log", 
+                    "type": "tabular"
+                }
+            ], 
+            "position": {
+                "left": 1990, 
+                "top": 10
+            }, 
+            "post_job_actions": {}, 
+            "tool_errors": null, 
+            "tool_id": "makevcf", 
+            "tool_state": "{\"__page__\": 0, \"addhp\": \"{\\\"log_opt\\\": \\\"False\\\", \\\"addhp_opt\\\": \\\"yes\\\", \\\"__current_case__\\\": 0, \\\"gen\\\": {\\\"__class__\\\": \\\"UnvalidatedValue\\\", \\\"value\\\": \\\"hg19\\\"}}\", \"__rerun_remap_job_id__\": null, \"lab\": \"\\\"sample\\\"\", \"filter\": \"{\\\"bed\\\": null, \\\"filter_opt\\\": \\\"yes\\\", \\\"__current_case__\\\": 0}\", \"qual\": \"\\\"30\\\"\", \"snp\": \"null\", \"ind\": \"null\", \"pil\": \"null\", \"chromInfo\": \"\\\"/home/svc_galaxy/galaxy/data/chrom_len/hg19.len\\\"\"}", 
+            "tool_version": null, 
+            "type": "tool", 
+            "user_outputs": [], 
+            "uuid": "4dc32686-8465-4503-8b31-bd11e1f8c2de"
+        }
+    }, 
+    "uuid": "6bff6ae4-5014-4849-80c9-ef54e9569b31"
+}
