@@ -89,8 +89,8 @@ while (my $line = <FQ>) {
   }
 }
 close FQ;
-print "Reads: $count\n";
-print "Unique: ", scalar keys %amp,
+print "Reads: $count\n",
+  "\nUnique: ", scalar keys %amp,
   "\n";
 
 # parse SAM, analyze alternative mapping locations

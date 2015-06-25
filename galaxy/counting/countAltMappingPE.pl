@@ -10,7 +10,6 @@
 #     - target and at least one other location (equivalency defined
 #         as larger edit distance and worse alignment score)
 #     - unmapped
-
 # Version PE: for paired-end read alignments
 
 use strict;
