@@ -278,7 +278,7 @@ while ($line) {
       my $pos = ($rc ? $div[3] + $off + length $div[9] : $div[3]);
 
       # mapped to correct location?
-      if (($div[2] eq $cut[0]) && ($pos > $cut[1]) && ($pos < $cut[2])) {
+      if (($div[2] eq $cut[0]) && ($pos >= $cut[1]) && ($pos <= $cut[2])) {
         push @res, $line;            # save correct mapping
         if ($idx == -1) {
           $idx = $#res;              # save index (if not already saved)
