@@ -9,9 +9,11 @@ To execute the pipeline, the programs/scripts can be run via the Galaxy platform
 the command-line, or the run.sh script:
 
 1. The included XML files wrap each of the tools for use in an instance of Galaxy.
+Before running the workflow, one must compile the C programs (via 'make') and check
+that they and the Perl scripts are executable and in the $PATH.
 
 2. The command-line usage of each tool can be found by running it with '-h' (or
-     without any command-line arguments).
+without any command-line arguments).
 
 3. The run.sh script executes the entire pipeline using a pre-selected set of
 parameters.  It requires that bowtie2 (2.2.3), samtools (0.1.19), and VarScan (2.3.7)

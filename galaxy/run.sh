@@ -128,10 +128,8 @@ perl filterSAM.pl $out2 $bed $out4 $out3 $out5 $len3 $log4
 
 # convert SAM to sorted BAM
 echo "Converting SAM to sorted BAM"
-tr14=temp.bam
-samtools view -b -S $out5 > $tr14
 out6=combinedFiltered.bam
-samtools sort $tr14 combinedFiltered
+samtools view -b -S $out5 | samtools sort - -f $out6
 
 # call variants
 echo "Calling variants"
@@ -154,7 +152,7 @@ perl addHPtoVCF.pl $tr18 $gen $out8
 
 # remove extra files
 rm $tr0 $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
-  $tr11 $tr12 $tr13 $tr14 $tr15 $tr16 $tr17 $tr18
+  $tr11 $tr12 $tr13 $tr15 $tr16 $tr17 $tr18
 
 # move files to output directory
 if [ ! -d $dir ]; then
