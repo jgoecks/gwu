@@ -1,5 +1,5 @@
 This set of tools is designed to detect variants in a sample that has been analyzed
-by amplicon-based targeted sequencing.
+by amplicon-based targeted resequencing.
 
 The three C programs (stitch, removePrimer, and qualTrim) need to be compiled.  They
 have been tested after compilation with gcc (version 4.8.2).  To compile with gcc,
@@ -17,7 +17,8 @@ without any command-line arguments).
 
 3. The run.sh script executes the entire pipeline using a pre-selected set of
 parameters.  It requires that bowtie2 (2.2.3), samtools (0.1.19), and VarScan (2.3.7)
-be installed and available on the command-line.  It is run by the following command:
+be installed and available on the command-line (the path to the VarScan jar file must
+be set in the run.sh script).  It is run by the following command:
 
    $ bash run.sh  <FASTQ1>  <FASTQ2>  <BED>  <GEN>  <IDX>  <DIR>
 

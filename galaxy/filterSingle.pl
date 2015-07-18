@@ -23,6 +23,8 @@ sub usage {
      -b     Option to favor singletons that have both primers removed
               over those that have not
      -q     Option to keep only higher quality singleton
+  Other options:
+     -ve    Option to print summary counts to STDOUT
 );
   exit;
 }
@@ -38,6 +40,7 @@ open(OUT, ">$ARGV[2]");
 my $chim = 0;
 my $bth = 0;
 my $qul = 0;
+my $verb = 0;
 for (my $x = 3; $x < scalar @ARGV; $x++) {
   if ($ARGV[$x] eq "-c") {
     $chim = 1;
@@ -45,6 +48,8 @@ for (my $x = 3; $x < scalar @ARGV; $x++) {
     $bth = 1;
   } elsif ($ARGV[$x] eq "-q") {
     $qul = 1;
+  } elsif ($ARGV[$x] eq "-ve") {
+    $verb = 1;
   }
 }
 
@@ -93,7 +98,7 @@ while (my $q = <FQ1>) {
   $count++;
 }
 close FQ1;
-#print "Reads in $ARGV[0]: $count\n";
+print "Reads in $ARGV[0]: $count\n" if ($verb);
 
 # parse second file
 my $print = 0; my $crem = 0;
@@ -189,9 +194,11 @@ foreach my $re (sort keys %seq) {
 }
 close OUT;
 
-#print "Reads in $ARGV[1]: $count",
-#  "\nReads printed to $ARGV[2]: $print";
-#print "\nReads removed for being chimeras: $crem" if ($chim);
-#print "\nReads removed for not having both primers: $brem" if ($bth);
-#print "\nReads removed for being lower quality: $qrem" if ($qul);
-#print "\n";
+if ($verb) {
+  print "Reads in $ARGV[1]: $count",
+    "\nReads printed to $ARGV[2]: $print";
+  print "\nReads removed for being chimeras: $crem" if ($chim);
+  print "\nReads removed for not having both primers: $brem" if ($bth);
+  print "\nReads removed for being lower quality: $qrem" if ($qul);
+  print "\n";
+}

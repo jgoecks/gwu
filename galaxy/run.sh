@@ -3,33 +3,32 @@
 # John M. Gaspar
 # Dec. 2014
 
-# Analyze a sample for variants.
-# External software requirements:
-#   - bowtie2 (2.2.3)
-#   - samtools (0.1.19)
-#   - VarScan (2.3.7)
-#
-# bowtie2 and samtools are assumed to be in PATH. Set VarScan location here:
-VARSCAN="./VarScan.v2.3.7.jar"
+# This script is designed to detect variants in a sample that has
+#   been analyzed by amplicon-based targeted resequencing.
 
-# Arguments check.
-if [ $# -ne "6" ]
-then
-  echo "Usage: `basename $0` <forward_reads> <reverse_reads> <primers_BED> <ref_genome_fasta> <ref_genome_bowtie2_prefix> <output_directory>"
+# External software requirements:
+#   - bowtie2 (2.2.3)   -- assumed to be in $PATH
+#   - samtools (0.1.19) -- assumed to be in $PATH
+#   - VarScan (2.3.7)   -- set location here:
+VARSCAN="./VarScan.v2.3.7.jar"
+if [ ! -f $VARSCAN ]; then
+  echo "VarScan jar file not found"
   exit -1
 fi
 
+# check command-line arguments
+if [ $# -lt 6 ]; then
+  echo "Usage: `basename $0`  <FASTQ1>  <FASTQ2>  <BED>  <GEN>  <IDX>  <DIR>" 1>&2
+  exit -1
+fi
 
 # input files
-file1=$1          # Input FASTQ file #1
-file2=$2          # Input FASTQ file #2
+file1=$1          # Input FASTQ file, paired-end reads #1
+file2=$2          # Input FASTQ file, paired-end reads #2
 bed=$3            # BED file listing locations of primers
 gen=$4            # reference genome (FASTA)
 idx=$5            # bowtie2 index prefix (indexes will be generated if necessary)
 dir=$6            # output directory
-
-# Set home directory for script + analysis scripts.
-HOME_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # check input files
 if [[ ! -f $file1 || ! -f $file2 ]]; then
@@ -42,6 +41,9 @@ elif [ ! -f $gen ]; then
   echo "Input reference genome not found"
   exit -1
 fi
+
+# set home directory
+HOME_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # retrieve primer-target sequences
 prim=primers.txt
@@ -133,6 +135,10 @@ if [ ! -f $out4 ]; then
   echo "Checking alternative mapping sites"
   perl ${HOME_DIR}/checkAltMapping.pl $out2 $out3 $prim $bed $gen $out4
 fi
+
+# at this point, one can combine the altMapping results for
+#   multiple samples using combAltMapping.pl, then proceed
+#   with the new altMapping.txt as $out4
 
 # filter SAM -- multi-mapping and realignment of length variants
 echo "Filtering SAM"
