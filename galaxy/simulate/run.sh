@@ -5,7 +5,13 @@
 
 # Simulate amplicon reads.
 # External software requirements:
-#   - ipcress (from exonerate 2.4.0)
+#   - ipcress (from exonerate 2.4.0) -- assumed to be in $PATH
+
+# check command-line arguments
+if [ $# -lt 3 ]; then
+  echo "Usage: `basename $0`  <BED>  <GEN>  [<VAR>]" 1>&2
+  exit -1
+fi
 
 # input files
 bed=$1            # BED file listing locations of primers

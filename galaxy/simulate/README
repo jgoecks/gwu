@@ -20,7 +20,7 @@ Choosing different parameters can be accomplished by editing the run.sh script.
 
 A word of warning: ipcress is very computationally expensive, in terms of time
 and memory usage.  One may wish to use a limited number of amplicons, or decrease
-the allowed number of mismatches ('mis', line 39) for the ipcress search.
+the allowed number of mismatches ('mis', line 45) for the ipcress search.
 
 - John M. Gaspar (jmgaspar@gwu.edu)
   June 2015

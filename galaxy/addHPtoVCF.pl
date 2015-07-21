@@ -8,7 +8,7 @@
 #   'AB=x' where x is AO/DP.
 
 # Analyzes only 10bp on either side of variant --
-#   cf. lines 186-8, or <logfile> output.
+#   cf. lines 189-91, or <logfile> output.
 
 use strict;
 use warnings;
