@@ -27,18 +27,21 @@ elif [ ! -f $gen ]; then
   exit -1
 fi
 
+# set home directory
+HOME_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # retrieve primer-target sequences
 prim=primers.txt
 if [ ! -f $prim ]; then
   echo "Retrieving primers"
-  perl getPrimers.pl $bed $gen $prim
+  perl ${HOME_DIR}/getPrimers.pl $bed $gen $prim
 fi
 
 # convert sequences to ipcress-friendly format
 ipc=primers.ipc
 min=70       # minimum amplicon length
 max=180      # maximum amplicon length
-perl formatPrimers.pl $prim $ipc $min $max
+perl ${HOME_DIR}/formatPrimers.pl $prim $ipc $min $max
 
 # run ipcress
 echo "Running ipcress"
@@ -50,7 +53,7 @@ ipcress -i $ipc -s $gen -m $mis -p 0 > $tr1
 echo "Filtering ipcress output"
 ipcout=primers.ipcout
 score=0.85   # minimum primer matching score
-perl filterIpc.pl $tr1 $ipc $gen $ipcout $score
+perl ${HOME_DIR}/filterIpc.pl $tr1 $ipc $gen $ipcout $score
 rm $tr1
 
 # simulate reads
@@ -60,10 +63,10 @@ out2=reads_2.fastq  # output FASTQ file #2
 num=1000     # number of PE reads for each perfect primer match score
 len=100      # length of PE reads to create
 if [ ! -f $var ]; then
-  perl readSim.pl $ipcout $ipc $gen $out1 $out2 $num \
+  perl ${HOME_DIR}/readSim.pl $ipcout $ipc $gen $out1 $out2 $num \
     $len $score $min,$max $bed
 else
   pct=10       # percent of reads to make variants
-  perl readSim.pl $ipcout $ipc $gen $out1 $out2 $num \
+  perl ${HOME_DIR}/readSim.pl $ipcout $ipc $gen $out1 $out2 $num \
     $len $score $min,$max $bed $var $pct
 fi

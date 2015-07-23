@@ -1,5 +1,5 @@
 This set of scripts is designed to simulate reads derived from amplicon-based
-targeted sequencing.
+targeted resequencing.
 
 The run.sh script executes the entire pipeline using a pre-selected set of
 parameters.  It requires that ipcress (part of exonerate 2.4.0) be installed and
