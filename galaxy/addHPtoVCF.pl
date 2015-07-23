@@ -82,6 +82,7 @@ while (my $line = <VCF>) {
     if ($spl[7] !~ m/DP\=(.*?)\;/) {
       die "Error! No DP found in $line\n";
     }
+    die "Error! Read depth of 0 in $line\n" if ($1 == 0);
     $ab = $ct / $1;
     $ab = int(10000000*$ab+0.5)/10000000;
   }
