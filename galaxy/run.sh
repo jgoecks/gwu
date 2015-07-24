@@ -123,6 +123,7 @@ bowtie2 -x $idx -U $out2 -S $out3 $bwtParam -p $proc
 echo "Finding length variants"
 tr11=len1.txt
 perl ${HOME_DIR}/findLengthVars.pl $out1 $bed $tr11
+# the output file (len1.txt) can be edited to exclude certain length variants
 tr12=len2.fastq
 perl ${HOME_DIR}/getLengthVars.pl $out1 $tr11 $tr12
 len3=realign.txt
@@ -168,17 +169,17 @@ perl ${HOME_DIR}/makeVCF.pl $tr15 $tr16 $out7 $tr17 $qual $dir
 tr18=temp2.vcf
 perl ${HOME_DIR}/addHPtoVCF.pl $tr17 $gen $tr18
 
-# filter variants: remove variants outside target regions;
-#   min. depth 20; min. variant allele observations 10;
-#   min. allele freq. (AF) 0.02; min. AF for in/dels 0.05;
-#   min. AF for C:G>T:A (possible deamination artifacts) 0.1;
-#   min. AF for variants in/near homopolymer runs (sliding scale from 4-8+)
+# filter variants: remove variants outside target regions
 out8=combinedFiltered.vcf
-perl ${HOME_DIR}/filterVCF.pl $tr18 $out8 -b $bed \
-  -d 20 -o 10 \
-  -a 0.02 -i 0.05 \
-  -m 0.1 \
-  -p 4,0.05,0.1:5,0.1,0.2:6,0.2,0.3:7,0.3,0.4:8,0.4,0.5
+perl ${HOME_DIR}/filterVCF.pl $tr18 $out8 -b $bed
+  # other filtering options for filterVCF.pl:
+  #   min. depth 20                          -d 20
+  #   min. variant allele observations 10    -o 10
+  #   min. allele freq. (AF) 0.02            -a 0.02
+  #   min. AF for in/dels 0.05               -i 0.05
+  #   min. AF for C:G>T:A 0.1                -m 0.1
+  #   min. AF for variants in/near homopolymer runs (sliding scale):
+  #       -p 4,0.05,0.1:5,0.1,0.2:6,0.2,0.3:7,0.3,0.4:8,0.4,0.5
 
 # remove extra files
 rm $tr0 $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
