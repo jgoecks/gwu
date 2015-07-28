@@ -9,7 +9,8 @@ use strict;
 use warnings;
 
 sub usage {
-  print q(Usage: perl makeVCF.pl  <infile1>  <infile2>  <infile3>  <outfile>  <minQual>  <label>
+  print q(Usage: perl makeVCF.pl  <infile1>  <infile2>  <infile3>  \
+                <outfile>  <minQual>  <label>
   Required:
     <infile1>  Output from VarScan pileup2snp
     <infile2>  Output from VarScan pileup2indel
@@ -37,22 +38,20 @@ my $minQual = 15;
 $minQual = $ARGV[4] if (scalar @ARGV > 4);
 my $min = $minQual + 32;  # converted to ASCII
 
-# sample name
+# sample name -- change '/' to '_' (for gemini compatibility)
 my $samp = $ARGV[3];      
 $samp = $ARGV[5] if (scalar @ARGV > 5);
+$samp =~ tr/\//_/;
 
 # print header of VCF file
 print OUT q(##fileformat=VCFv4.2
-##source=VarScan2
-##INFO=<ID=AB,Number=1,Type=Float,Description="Allele frequency">
-##INFO=<ID=AO,Number=1,Type=Integer,Description="Alternate allele observations">
-##INFO=<ID=RO,Number=1,Type=Integer,Description="Reference allele observations">
-##INFO=<ID=DP,Number=1,Type=Integer,Description="Read depth (max. over reference positions)">
+##source=VarScan2,makeVCF.pl
 ##INFO=<ID=CIGAR,Number=1,Type=String,Description="CIGAR representation of the alternate allele">
-##INFO=<ID=TYPE,Number=1,Type=String,Description="Type of alternate allele (snp, ins, or del)">
-##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##INFO=<ID=TYPE,Number=1,Type=String,Description="Type of alternate allele (sub, ins, or del)">
 ##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele frequency">
+##FORMAT=<ID=AO,Number=1,Type=Integer,Description="Alternate allele observations">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth (max. over reference positions)">
+##FORMAT=<ID=RO,Number=1,Type=Integer,Description="Reference allele observations">
 );
 print OUT "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t$samp\n";
 
@@ -88,9 +87,6 @@ if ($sline) {
 } else {
   $sline = "chr99\t999999999";
 }
-
-# constant genotype for each alt. allele
-my $gt = "0/1";
 
 # print sorted output
 while (1) {
@@ -158,10 +154,10 @@ while (1) {
     }
 
     # print output
-    my $af = int(10000000*$ao/$dep+0.5) / 10000000;
+    my $af = int(1000000*$ao/$dep+0.5) / 1000000;
     print OUT "$iar[0]\t$iar[1]\t.\t$ref\t$alt\t0\t.",
-      "\tAB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=$type",
-      "\tGT:AF:DP\t$gt:$af:$dep\n";
+      "\tCIGAR=$cig;TYPE=$type",
+      "\tAF:AO:DP:RO\t$af:$ao:$dep:$ro\n";
 
     # load next
     $iline = <IND>;
@@ -179,11 +175,11 @@ while (1) {
     my $ao = $sar[5];
     my $ro = $sar[4];
     my $dep = $dp{$sar[0]}{$sar[1]};
-    my $af = int(10000000*$ao/$dep+0.5) / 10000000;
+    my $af = int(1000000*$ao/$dep+0.5) / 1000000;
     my $cig = "1X";
     print OUT "$sar[0]\t$sar[1]\t.\t$ref\t$alt\t0\t.",
-      "\tAB=$af;AO=$ao;CIGAR=$cig;DP=$dep;RO=$ro;TYPE=snp",
-      "\tGT:AF:DP\t$gt:$af:$dep\n";
+      "\tCIGAR=$cig;TYPE=sub",
+      "\tAF:AO:DP:RO\t$af:$ao:$dep:$ro\n";
 
     # load next
     $sline = <SNP>;

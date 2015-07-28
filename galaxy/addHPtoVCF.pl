@@ -4,23 +4,24 @@
 # Jan. 2015
 
 # Add "HP" tag to VCF that lists homopolymer length
-#   adjacent to each variant. Also changes 'AB=0' to
-#   'AB=x' where x is AO/DP.
+#   adjacent to each variant.
 
 # Analyzes only 10bp on either side of variant --
-#   cf. lines 189-91, or <logfile> output.
+#   cf. lines 187-89, or <logfile> output.
 
 use strict;
 use warnings;
 
 sub usage {
-  print q(Usage: perl addHPtoVCF.pl  <infile>  <genome>  <outfile>  <logfile>
+  print q(Usage: perl addHPtoVCF.pl  <infile>  <genome>  <outfile>  [<logfile>]
   Required:
-    <infile>   Input VCF file listing variants, freebayes-style
+    <infile>   Input VCF file -- should list one variant
+                 per line, with INFO field "CIGAR"
     <genome>   Fasta file of reference genome
     <outfile>  Output VCF file
   Optional:
-    <logfile>  Verbose log file
+    <logfile>  Verbose log file (if selected, input VCF
+                 should have FORMAT field "AF")
 );
   exit;
 }
@@ -36,18 +37,16 @@ $/ = "\n";
 open(OUT, ">$ARGV[2]");
 if (scalar @ARGV > 3) {
   open(LOG, ">$ARGV[3]");
-  print LOG "#CHROM\tPOS\tREF\tALT\tAB\tCIGAR\tGenomeSegment\tHP\n";
+  print LOG "#CHROM\tPOS\tREF\tALT\tAF\tCIGAR\tGenomeSegment\tHP\n";
 }
 
 # analyze VCF file
 my $chr = "";
 my $seq = "";
-my $pr = 0;
+my $pr = 1;  # flag for header printing
 while (my $line = <VCF>) {
   if (substr($line, 0, 1) eq '#') {
-    if (substr($line, 0, 6) eq '##INFO') {
-      $pr = 1;
-    } elsif ($pr) {
+    if ($pr && substr($line, 0, 8) eq '##FORMAT') {
       print OUT "##INFO=<ID=HP,Number=1,Type=Integer,",
         "Description=\"Length of adjacent homopolymer that matches variant\">\n";
       $pr = 0;
@@ -57,39 +56,37 @@ while (my $line = <VCF>) {
   }
   chomp $line;
   my @spl = split("\t", $line);
-  die "Error! $ARGV[0] is improperly formatted\n" if (scalar @spl < 8);
-
-  # determine abundance
-  if ($spl[7] !~ m/AB\=(.*?)\;/) {
-    die "Error! No AB found in $line\n";
-  }
-  my $ab = $1;
+  die "Error! $ARGV[0] is improperly formatted\n" if (scalar @spl < 10);
 
   # skip if multiple alleles on one line
-  my @brk = split(',', $ab);
-  if (scalar @brk > 1) {
-    print "Warning! Multiple variant alleles in $line\n";
+  my @b1 = split(',', $spl[3]);
+  my @b2 = split(',', $spl[4]);
+  if (scalar @b1 > 1 || scalar @b2 > 1) {
+    print "Warning! Multiple variant alleles in VCF record:\n$line\n";
     print OUT "$line\n";
     next;
   }
 
-  # calculate abundance if given as 0
-  if ($ab == 0) {
-    if ($spl[7] !~ m/AO\=(.*?)\;/) {
-      die "Error! No AO found in $line\n";
+  # determine allele frequency
+  my $af = 0;
+  if (scalar @ARGV > 3) {
+    my @div = split(':', $spl[8]);
+    my $idx = -1;
+    for (my $x = 0; $x < scalar @div; $x++) {
+      if ($div[$x] eq "AF") {
+        $idx = $x;
+        last;
+      }
     }
-    my $ct = $1;
-    if ($spl[7] !~ m/DP\=(.*?)\;/) {
-      die "Error! No DP found in $line\n";
-    }
-    die "Error! Read depth of 0 in $line\n" if ($1 == 0);
-    $ab = $ct / $1;
-    $ab = int(10000000*$ab+0.5)/10000000;
+    my @cut = split(':', $spl[9]);
+    die "Error! Cannot find \"AF\" in VCF record:\n$line\n"
+      if ($idx == -1 || $idx >= scalar @cut);
+    $af = $cut[$idx];
   }
 
   # determine position of variant(s) using CIGAR
-  if ($spl[7] !~ m/CIGAR\=(.*?)\;/) {
-    die "Error! No CIGAR found in $line\n";
+  if ($spl[7] !~ m/CIGAR\=([0-9DIMX]+)/) {
+    die "Error! Cannot find \"CIGAR\" in VCF record:\n$line\n";
   }
   my $cig = $1;
   my @loc = ();
@@ -154,7 +151,7 @@ while (my $line = <VCF>) {
   if ($flag) {
     # complex variant
     print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]",
-      "\t$ab\t$cig\tnot checked\n" if (scalar @ARGV > 3);
+      "\t$af\t$cig\tnot checked\n" if (scalar @ARGV > 3);
     $hit = 0;
   } else {
 
@@ -215,11 +212,11 @@ while (my $line = <VCF>) {
       $seg2 =~ m/^($base*)/;
       $hit += length $1;
     }
-    print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]\t$ab",
+    print LOG "$spl[0]\t$spl[1]\t$spl[3]\t$spl[4]\t$af",
       "\t$cig\t$seg1 $alt $seg2\t$hit\n" if (scalar @ARGV > 3);
   }
 
-  $spl[7] =~ s/AB\=(.*?)\;/AB\=$ab\;/;
+  # print new VCF record
   $spl[7] .= ";HP=$hit";
   print OUT join("\t", @spl), "\n";
 

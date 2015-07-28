@@ -20,8 +20,9 @@ use warnings;
 sub usage {
   print q(Usage: perl filterVCF.pl  <infile>  <outfile>  [options]
   Required:
-    <infile>     Input VCF file -- should have INFO fields AB, AO, DP, HP,
-                   CIGAR, TYPE (produced by makeVCF.pl, addHPtoVCF.pl)
+    <infile>     Input VCF file -- should list one variant per line,
+                   with INFO fields CIGAR, TYPE, HP, and FORMAT fields
+                   AF, AO, DP, RO (produced by makeVCF.pl, addHPtoVCF.pl)
     <outfile>    Output VCF file
   Filtering options (in order of precedence):
     -b  <file>   BED file listing locations of primers -- variants
@@ -62,7 +63,7 @@ open(IN, $ARGV[0]) || die "Cannot open $ARGV[0]\n";
 my @opts;
 my %reg;  # target regions
 my %minHP; my $maxHP = 100;  # maximum HP value
-my $minAB = 0; my $minAO = 0; my $minDP = 0;
+my $minAF = 0; my $minAO = 0; my $minDP = 0;
 my $minID = 0; my $minCT = 0;
 my $verb = 0;
 for (my $x = 2; $x < scalar @ARGV; $x++) {
@@ -72,8 +73,8 @@ for (my $x = 2; $x < scalar @ARGV; $x++) {
     $verb = 1;
   } elsif ($x < scalar @ARGV - 1) {
     if ($ARGV[$x] eq "-a") {
-      $minAB = $ARGV[++$x];
-      push @opts, "AB >= $minAB";
+      $minAF = $ARGV[++$x];
+      push @opts, "AF >= $minAF";
     } elsif ($ARGV[$x] eq "-o") {
       $minAO = $ARGV[++$x];
       push @opts, "AO >= $minAO";
@@ -82,10 +83,10 @@ for (my $x = 2; $x < scalar @ARGV; $x++) {
       push @opts, "DP >= $minDP";
     } elsif ($ARGV[$x] eq "-i") {
       $minID = $ARGV[++$x];
-      push @opts, "AB(in/del) >= $minID";
+      push @opts, "AF(in/del) >= $minID";
     } elsif ($ARGV[$x] eq "-m") {
       $minCT = $ARGV[++$x];
-      push @opts, "AB(C:G>T:A) >= $minCT";
+      push @opts, "AF(C:G>T:A) >= $minCT";
     } elsif ($ARGV[$x] eq "-p") {
 
       # parse homopolymer run parameter
@@ -162,7 +163,7 @@ for (my $x = 2; $x < scalar @ARGV; $x++) {
 
 # parse vcf file, produce output
 my $var = 0; my $good = 0;  # counting variables
-my $xAB = 0; my $xAO = 0; my $xDP = 0;
+my $xAF = 0; my $xAO = 0; my $xDP = 0;
 my $xID = 0; my $xCT = 0; my $xBed = 0;
 my $xHP = 0;
 my $pr = 1;  # flag for header printing
@@ -171,6 +172,7 @@ while (my $line = <IN>) {
   if (substr($line, 0, 1) eq '#') {
     if ($pr && substr($line, 0, 6) eq '##INFO'
         && scalar @opts > 0) {
+      # print filter options to header
       @opts = sort @opts;
       print OUT "##filter=\"";
       for (my $x = 0; $x < scalar @opts - 1; $x++) {
@@ -184,42 +186,19 @@ while (my $line = <IN>) {
   }
   $var++;
 
-  # load info for variant
+  # process variant
+  chomp $line;
   my @spl = split("\t", $line);
-  my @div = split(',', $spl[4]);  # different alt. alleles
-  die "Error! Multiple alt. alleles in VCF record:\n$line\n"
-    if (scalar @div > 1);
+  die "Error! $ARGV[0] is improperly formatted\n" if (scalar @spl < 10);
 
-  if ($spl[7] !~ m/AB\=([\d.]+)/) {
-    die "Error! No AB found in VCF record:\n$line\n";
-  }
-  my $ab = $1;
-  if ($spl[7] !~ m/AO\=(\d+)/) {
-    die "Error! No AO found in VCF record:\n$line\n";
-  }
-  my $ao = $1;
-  if ($spl[7] !~ m/DP\=(\d+)/) {
-    die "Error! No DP found in VCF record:\n$line\n";
-  }
-  my $dp = $1;
-
-  my @hp = (0);
-  if (scalar keys %minHP > 0) {
-    if ($spl[7] !~ m/HP\=(\d+)/) {
-      die "Error! No HP found in VCF record:\n$line\n";
-    }
-    if (exists $minHP{$1}) {
-      @hp = split(',', $minHP{$1});
-    }
-  }
-
-  my $type = 0;  # 0 for sub, 1 for ins, 2 for del
-  if ($spl[7] =~ m/TYPE\=ins/) {
-    $type = 1;
-  } elsif ($spl[7] =~ m/TYPE\=del/) {
-    $type = 2;
-  } elsif ($spl[7] !~ m/TYPE\=snp/) {
-    die "Error! Unknown TYPE in VCF record:\n$line\n";
+  # skip if multiple alleles on one line
+  my @b1 = split(',', $spl[3]);
+  my @b2 = split(',', $spl[4]);
+  if (scalar @b1 > 1 || scalar @b2 > 1) {
+    print "Warning! Multiple variant alleles in VCF record:\n$line\n";
+    print OUT "$line\n";
+    $good++;
+    next;
   }
 
   # check if variants are outside of target regions
@@ -227,10 +206,10 @@ while (my $line = <IN>) {
 
     # determine position of variant(s) using CIGAR
     if ($spl[7] !~ m/CIGAR\=([0-9DIMX]+)/) {
-      die "Error! No CIGAR found in VCF record:\n$line\n";
+      die "Error! Cannot find \"CIGAR\" in VCF record:\n$line\n";
     }
     my $cig = $1;
-    my $targ = 0;
+    my $targ = 0;  # flag for location within a target
     my $pos = 0;
     while ($cig =~ m/(\d+)([IDMX])/g) {
       if ($2 ne 'M') {
@@ -253,24 +232,66 @@ while (my $line = <IN>) {
     }
   }
 
+  # load other info for variant: HP, TYPE
+  my $type = 0;  # 0 for sub, 1 for ins, 2 for del
+  if ($spl[7] =~ m/TYPE\=ins/) {
+    $type = 1;
+  } elsif ($spl[7] =~ m/TYPE\=del/) {
+    $type = 2;
+  } elsif ($spl[7] !~ m/TYPE\=sub/) {
+    die "Error! Unknown TYPE in VCF record:\n$line\n";
+  }
+  my @hp = (0);
+  if (scalar keys %minHP > 0) {
+    if ($spl[7] !~ m/HP\=(\d+)/) {
+      die "Error! Cannot find \"HP\" in VCF record:\n$line\n";
+    }
+    if (exists $minHP{$1}) {
+      @hp = split(',', $minHP{$1});
+    }
+  }
+
+  # load FORMAT fields: AF, AO, DP
+  my @div = split(':', $spl[8]);
+  my $idxAF = -1; my $idxAO = -1; my $idxDP = -1;
+  for (my $x = 0; $x < scalar @div; $x++) {
+    if ($div[$x] eq "AF") {
+      $idxAF = $x;
+    } elsif ($div[$x] eq "AO") {
+      $idxAO = $x;
+    } elsif ($div[$x] eq "DP") {
+      $idxDP = $x;
+    }
+  }
+  my @cut = split(':', $spl[9]);
+  die "Error! Cannot find \"AF\" in VCF record:\n$line\n"
+    if ($idxAF == -1 || $idxAF >= scalar @cut);
+  die "Error! Cannot find \"AO\" in VCF record:\n$line\n"
+    if ($idxAO == -1 || $idxAO >= scalar @cut);
+  die "Error! Cannot find \"DP\" in VCF record:\n$line\n"
+    if ($idxDP == -1 || $idxDP >= scalar @cut);
+  my $af = $cut[$idxAF];
+  my $ao = $cut[$idxAO];
+  my $dp = $cut[$idxDP];
+
   # check other filtering criteria
   if ($dp < $minDP) {
     $xDP++;
   } elsif ($ao < $minAO) {
     $xAO++;
-  } elsif ($ab < $minAB) {
-    $xAB++;
-  } elsif ($type && $ab < $minID) {
+  } elsif ($af < $minAF) {
+    $xAF++;
+  } elsif ($type && $af < $minID) {
     $xID++;
   } elsif ( (($spl[3] eq 'C' && $spl[4] eq 'T') ||
              ($spl[3] eq 'G' && $spl[4] eq 'A'))
-            && $ab < $minCT) {
+            && $af < $minCT) {
     $xCT++;
-  } elsif ( ((scalar @hp == 1 || (!$type)) && $ab < $hp[0])
-      || (scalar @hp > 1 && $type && $ab < $hp[1]) ) {
+  } elsif ( ((scalar @hp == 1 || (!$type)) && $af < $hp[0])
+      || (scalar @hp > 1 && $type && $af < $hp[1]) ) {
     $xHP++;
   } else {
-    print OUT $line;
+    print OUT "$line\n";
     $good++;
   }
 }
@@ -284,7 +305,7 @@ if ($verb) {
   print "\n  Outside of target regions: $xBed" if (scalar keys %reg > 0);
   print "\n  Read depth less than $minDP: $xDP" if ($minDP);
   print "\n  Variant allele observations less than $minAO: $xAO" if ($minAO);
-  print "\n  Allele frequency less than $minAB: $xAB" if ($minAB);
+  print "\n  Allele frequency less than $minAF: $xAF" if ($minAF);
   print "\n  In/del allele frequency less than $minID: $xID" if ($minID);
   print "\n  C:G>T:A allele frequency less than $minCT: $xCT" if ($minCT);
   print "\n  Variant in/near homopolymer run: $xHP" if (scalar keys %minHP > 0);
