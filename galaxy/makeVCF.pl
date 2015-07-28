@@ -38,10 +38,10 @@ my $minQual = 15;
 $minQual = $ARGV[4] if (scalar @ARGV > 4);
 my $min = $minQual + 32;  # converted to ASCII
 
-# sample name -- change '/' to '_' (for gemini compatibility)
-my $samp = $ARGV[3];      
+# sample name -- change '/.' to '_' (for gemini compatibility)
+my $samp = $ARGV[3];
 $samp = $ARGV[5] if (scalar @ARGV > 5);
-$samp =~ tr/\//_/;
+$samp =~ tr/\/\./__/;
 
 # print header of VCF file
 print OUT q(##fileformat=VCFv4.2
