@@ -38,7 +38,7 @@ my $minQual = 15;
 $minQual = $ARGV[4] if (scalar @ARGV > 4);
 my $min = $minQual + 32;  # converted to ASCII
 
-# sample name -- change '/.' to '_' (for gemini compatibility)
+# sample name -- change '/' and '.' to '_' (for gemini compatibility)
 my $samp = $ARGV[3];
 $samp = $ARGV[5] if (scalar @ARGV > 5);
 $samp =~ tr/\/\./__/;
@@ -68,6 +68,9 @@ while (my $line = <PIL>) {
   $dp{$spl[0]}{$spl[1]} = $depth;
 }
 close PIL;
+
+# constant genotype for each alt. allele
+my $gt = "0/1";
 
 # skip headers
 my $waste = <SNP>;
@@ -157,7 +160,7 @@ while (1) {
     my $af = int(1000000*$ao/$dep+0.5) / 1000000;
     print OUT "$iar[0]\t$iar[1]\t.\t$ref\t$alt\t0\t.",
       "\tCIGAR=$cig;TYPE=$type",
-      "\tAF:AO:DP:RO\t$af:$ao:$dep:$ro\n";
+      "\tGT:AF:AO:DP:RO\t$gt:$af:$ao:$dep:$ro\n";
 
     # load next
     $iline = <IND>;
@@ -179,7 +182,7 @@ while (1) {
     my $cig = "1X";
     print OUT "$sar[0]\t$sar[1]\t.\t$ref\t$alt\t0\t.",
       "\tCIGAR=$cig;TYPE=sub",
-      "\tAF:AO:DP:RO\t$af:$ao:$dep:$ro\n";
+      "\tGT:AF:AO:DP:RO\t$gt:$af:$ao:$dep:$ro\n";
 
     # load next
     $sline = <SNP>;
