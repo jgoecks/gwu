@@ -174,7 +174,7 @@ while (my $line = <IN>) {
         && scalar @opts > 0) {
       # print filter options to header
       @opts = sort @opts;
-      print OUT "##filter=\"";
+      print OUT "##FILTER=\"";
       for (my $x = 0; $x < scalar @opts - 1; $x++) {
         print OUT "$opts[$x]; "
       }
