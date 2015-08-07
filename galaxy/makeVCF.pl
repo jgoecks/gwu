@@ -48,6 +48,7 @@ print OUT q(##fileformat=VCFv4.2
 ##source=VarScan2,makeVCF.pl
 ##INFO=<ID=CIGAR,Number=1,Type=String,Description="CIGAR representation of the alternate allele">
 ##INFO=<ID=TYPE,Number=1,Type=String,Description="Type of alternate allele (sub, ins, or del)">
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
 ##FORMAT=<ID=AF,Number=1,Type=Float,Description="Allele frequency">
 ##FORMAT=<ID=AO,Number=1,Type=Integer,Description="Alternate allele observations">
 ##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read depth (max. over reference positions)">
