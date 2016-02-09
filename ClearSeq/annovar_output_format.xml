@@ -1,0 +1,15 @@
+<tool id="reformat_annovar" name="Reformat ANNOVAR output" version="0.1">
+  <command interpreter="perl">
+    annovar_output_format.V2.pl "$input" > "$output"
+  </command>
+  <inputs>
+    <param name="input" type="data" format="txt" label="Annotated variants from ANNOVAR" />
+  </inputs>
+  <outputs>
+    <data format="tabular" name="output" label="${tool.name} on ${on_string}"/>
+  </outputs>
+  
+  <help>
+This tool reformats the annotated variants from ANNOVAR.
+  </help>
+</tool>

@@ -1,0 +1,20 @@
+<tool id="RNASeq_report" name="RNASeq Focussed Report" version="0.1">
+  <description> on mutation, expression and fusion for a subset of genes</description>
+  <command interpreter="perl">
+    make_HTML_patient_report_internally_ranked.V6.pl "$input1" "$input2" "$input3" "$input4" "$input5" > "$output" 2> "${output}.stderr.txt"
+  </command>
+  <inputs>
+    <param name="input1" type="data" format="txt" label="File listing genes in which variants should be reported" />
+    <param name="input2" type="data" format="txt" label="File listing genes whose expression should be reported" />
+    <param name="input3" type="data" format="txt" label="Reformatted output from ANNOVAR" />
+    <param name="input4" type="data" format="txt" label="Gene expression file from Cufflinks" />
+    <param name="input5" type="data" format="txt" label="Output from Tophat Fusion Post (text file)" />
+  </inputs>
+  <outputs>
+    <data format="html" name="output" label="RNASeq_focussed_report.html"/>
+  </outputs>
+
+  <help>
+Custom report for genes of interest from RNASeq data
+  </help>
+</tool>
