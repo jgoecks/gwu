@@ -1,20 +1,13 @@
 #!/bin/bash
 
-# John M. Gaspar
-# Dec. 2014
-
+# John M. Gaspar and Jeremy Goecks
 # This script is designed to detect variants in a sample that has
 #   been analyzed by amplicon-based targeted resequencing.
 
-# External software requirements:
-#   - bowtie2 (2.2.3)   -- assumed to be in $PATH
-#   - samtools (0.1.19) -- assumed to be in $PATH
-#   - VarScan (2.3.7)   -- set location here:
-VARSCAN="./VarScan.v2.3.7.jar"
-if [ ! -f $VARSCAN ]; then
-  echo "VarScan jar file not found"
-  exit -1
-fi
+# External software requirements, which are setup and configured via make.
+#   - bowtie2 (2.2.3)
+#   - samtools (0.1.19)
+#   - VarScan (2.3.7)
 
 # check command-line arguments
 if [ $# -lt 6 ]; then
@@ -158,9 +151,9 @@ out7=combinedFiltered.pileup
 samtools mpileup -B -Q 0 -d 100000 -f $gen $out6 > $out7
 qual=30  # min quality score to count a base
 tr15=combFil.snp
-java -jar ${VARSCAN} pileup2snp --min-avg-qual $qual --min-coverage 0 --min-var-freq 0.01 --variants < $out7 > $tr15
+varscan pileup2snp --min-avg-qual $qual --min-coverage 0 --min-var-freq 0.01 --variants < $out7 > $tr15
 tr16=combFil.indel
-java -jar ${VARSCAN} pileup2indel --min-avg-qual $qual --min-coverage 0 --min-var-freq 0.01 --variants < $out7 > $tr16
+varscan pileup2indel --min-avg-qual $qual --min-coverage 0 --min-var-freq 0.01 --variants < $out7 > $tr16
 
 # make VCF, filter
 echo "Producing VCF"
