@@ -28,9 +28,9 @@ run: all target_regions.bed
 all: programs env
 	touch all
 
-# Create sequencing targets from primers.
+# Create sequencing targets from primers, removing "bad" regions that have too high a repeat density.
 target_regions.bed:
-	python primers_to_target_regions.py < $(PRIMERS) > target_regions.bed
+	python primers_to_target_regions.py < $(PRIMERS) | python remove_bad_regions.py > sort -k1,1 -k2,2 > target_regions.bed
 
 # Compile C programs. Creates empty target for record keeping.
 programs: removePrimer qualTrim stitch
