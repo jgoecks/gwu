@@ -21,7 +21,12 @@ file2=$2          # Input FASTQ file, paired-end reads #2
 bed=$3            # BED file listing locations of primers
 gen=$4            # reference genome (FASTA)
 idx=$5            # bowtie2 index prefix (indexes will be generated if necessary)
-dir=$6            # output directory
+dir=$6            # output directory -- NOT CURRENTLY USED
+
+# Get a base name for naming purposes.
+filename=$(basename "$file1")
+extension="${filename##*.}"
+base="${filename%.*}"
 
 # check input files
 if [[ ! -f $file1 || ! -f $file2 ]]; then
@@ -37,6 +42,16 @@ fi
 
 # set home directory
 HOME_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Create directory for outputs.
+mkdir ${base} && pushd ${base}
+
+# Update file locations.
+file1=../${file1}
+file2=../${file2}
+bed=../${bed}
+gen=../${gen}
+idx=../${idx}
 
 # retrieve primer-target sequences
 prim=primers.txt
@@ -136,13 +151,13 @@ fi
 
 # filter SAM -- multi-mapping and realignment of length variants
 echo "Filtering SAM"
-out5=combinedFiltered.sam
+out5=${base}.final.sam
 log4=realign.log
 perl ${HOME_DIR}/filterSAM.pl $out2 $bed $out4 $out3 $out5 $len3 $log4
 
 # convert SAM to sorted BAM
 echo "Converting SAM to sorted BAM"
-out6=combinedFiltered.bam
+out6=${base}.final.bam
 samtools view -b -S $out5 | samtools sort - -o $out6
 
 # call variants
@@ -163,7 +178,7 @@ tr18=temp2.vcf
 perl ${HOME_DIR}/addHPtoVCF.pl $tr17 $gen $tr18
 
 # filter variants: remove variants outside target regions
-out8=combinedFiltered.vcf
+out8=${base}.final.vcf
 perl ${HOME_DIR}/filterVCF.pl $tr18 $out8 -b $bed
   # other filtering options for filterVCF.pl:
   #   min. depth 20                          -d 20
@@ -175,12 +190,7 @@ perl ${HOME_DIR}/filterVCF.pl $tr18 $out8 -b $bed
   #       -p 4,0.05,0.1:5,0.1,0.2:6,0.2,0.3:7,0.3,0.4:8,0.4,0.5
 
 # remove extra files
-# rm $tr0 $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
-#   $tr11 $tr12 $tr13 $tr15 $tr16 $tr17 $tr18
+rm $tr0 $tr1 $tr2 $tr3 $tr4 $tr5 $tr6 $tr7 $tr8 $tr9 $tr10 \
+  $tr11 $tr12 $tr13 $tr15 $tr16 $tr17 $tr18
 
-# move files to output directory
-# if [ ! -d $dir ]; then
-#   mkdir $dir
-# fi
-# mv $out1 $out2 $out3 $out4 $out5 $out6 $out7 $out8 \
-#   $log1 $log2 $log3 $log4 $len3 $dir
+popd

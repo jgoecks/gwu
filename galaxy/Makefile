@@ -1,8 +1,8 @@
 SHELL=bash
 
 # Sequence data to analyze:
-FASTQ1=../../test/JPE10900-4296-0036-VHL-Control_S36_L001_R1_001.fastq
-FASTQ2=../../test/JPE10900-4296-0036-VHL-Control_S36_L001_R2_001.fastq
+FASTQ1=../test/JPE10900-4296-0036-VHL-Control_S36_L001_R1_001.fastq
+FASTQ2=../test/JPE10900-4296-0036-VHL-Control_S36_L001_R2_001.fastq
 
 # PCR primer locations:
 PRIMERS=../test/rcc_primers.bed
@@ -11,18 +11,13 @@ PRIMERS=../test/rcc_primers.bed
 OUTPUT_DIR=test_output
 
 # Reference genome fasta and bowtie2 indices.
-FASTA=../../data/hg19/hg19.fa
-BOWTIE2_INDICES=../../data/hg19/bowtie2/hg19
+FASTA=../data/hg19/hg19.fa
+BOWTIE2_INDICES=../data/hg19/bowtie2/hg19
 
 # Run complete amplicon analysis for a single sample.
 run: all target_regions.bed
 	source activate amplicon-analysis-env && \
-	mkdir $(OUTPUT_DIR) && pushd $(OUTPUT_DIR) && \
-	bash -x ../run.sh $(FASTQ1) $(FASTQ2) ../$(PRIMERS) $(FASTA) $(BOWTIE2_INDICES) $(OUTPUT_DIR)
-	# && \
-	# bgzip combinedFiltered.vcf && tabix -p combinedFiltered.vcf.gz && \
-	# vcffilter combinedFiltered.vcf.gz > target_regions_combinedFiltered.vcf.gz
-
+	bash -x run.sh $(FASTQ1) $(FASTQ2) $(PRIMERS) $(FASTA) $(BOWTIE2_INDICES) $(OUTPUT_DIR)
 
 # Compile programs and set up analysis environment. Creates empty target for record keeping.
 all: programs env
