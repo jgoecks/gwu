@@ -8,6 +8,9 @@
 #   - bowtie2 (tested with: 2.2.3)
 #   - samtools (0.1.19)
 #   - VarScan (2.3.7)
+#
+# Inputs requirements:
+#   - all files must have fully-qualified, absolute paths.
 
 # check command-line arguments
 if [ $# -lt 6 ]; then
@@ -45,13 +48,6 @@ HOME_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # Create directory for outputs.
 mkdir ${base} && pushd ${base}
-
-# Update file locations.
-file1=../${file1}
-file2=../${file2}
-bed=../${bed}
-gen=../${gen}
-idx=../${idx}
 
 # retrieve primer-target sequences
 prim=primers.txt
