@@ -21,6 +21,13 @@ BOWTIE2_INDICES=$(DATA_DIR)/data/hg19/bowtie2/hg19
 # Commands.
 #
 
+
+
+
+# Process all fastq files in a directory.
+run_dir: all env target_primers.bed
+	$(ACTIVATE_ENV) && bash -x ./run_dir.sh ~/projects/gwu/galaxy/target_primers.bed $(FASTA) $(BOWTIE2_INDICES) ~/projects/rcc/Plate7
+
 run: all env
 	#$(ACTIVATE_ENV) && bash -x ./run.sh $(PRIMERS) $(FASTA) $(BOWTIE2_INDICES)
 	$(ACTIVATE_ENV) && bash -x /home/jgoecks/projects/gwu/galaxy/run.sh \
@@ -35,6 +42,10 @@ run: all env
 all: programs env
 	touch all
 
+# Create list of good primers.
+target_primers.bed:
+	python remove_bad_regions.py < $(PRIMERS) | sort -k1,1 -k2,2 > target_primers.bed
+
 # Create sequencing targets from primers, removing "bad" regions that have too high a repeat density.
 target_regions.bed:
 	python primers_to_target_regions.py < $(PRIMERS) | python remove_bad_regions.py | sort -k1,1 -k2,2 > target_regions.bed
@@ -44,11 +55,12 @@ env:
 	# Special installation necessary for samtools to link correctly on linux.
 	conda create -n $(ENV_NAME) -y python && \
 		pip install bioblend && \
-		conda install -c bioconda -y bowtie2 varscan vcflib && \
+		conda install -c bioconda -y bowtie2 varscan vcflib datamash && \
 		conda install -c r -y ncurses && conda install -c bioconda -y samtools
 	touch env
 
-clean:
+## Remove environment.
+clean-env:
 	conda remove --name $(ENV_NAME) --all -y
 
 # Compile C programs. Creates empty target for record keeping.
