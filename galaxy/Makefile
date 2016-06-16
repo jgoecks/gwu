@@ -1,12 +1,15 @@
+SHELL=bash
+
 #
 # General usage:
 # % make env
 # % make run
 #
 
+
 # For setting up a conda environment.
 ENV_NAME=rcc-env
-ACTIVATE_ENV=bash -c "source activate $(ENV_NAME)"
+ACTIVATE_ENV=source activate $(ENV_NAME)
 
 #
 # For running the analyses.
@@ -21,8 +24,12 @@ BOWTIE2_INDICES=$(DATA_DIR)/data/hg19/bowtie2/hg19
 # Commands.
 #
 
-
-
+# Process all matched tumor (P = plasma)-normal (BC = buffy coat) pairs in the current
+# directory to create GEMINI databases and do somatic variant detection. This command
+# should be run after run_dir has completed successfully; it uses the BAMs created via run_dir
+# as inputs.
+run_paired_somatic: env
+	$(ACTIVATE_ENV); parallel -j 1 --xapply "bash -x run_paired_somatic.sh {1} {2} {=1 s/-P_.*$///g =}" ::: *-P_* ::: *BC_*
 
 # Process all fastq files in a directory.
 run_dir: all env target_primers.bed
@@ -53,15 +60,16 @@ target_regions.bed:
 # Set up conda virtual environment with needed packages and tools.
 env:
 	# Special installation necessary for samtools to link correctly on linux.
-	conda create -n $(ENV_NAME) -y python && \
-		pip install bioblend && \
-		conda install -c bioconda -y bowtie2 varscan vcflib datamash && \
-		conda install -c r -y ncurses && conda install -c bioconda -y samtools
+	conda create -n $(ENV_NAME) -y python
+	$(ACTIVATE_ENV); pip install bioblend; \
+		conda install -c bioconda -y bowtie2 varscan vcflib datamash freebayes parallel vt snpeff gemini; \
+		conda install -c r -y ncurses && conda install -c bioconda -y samtools; \
 	touch env
 
 ## Remove environment.
 clean-env:
 	conda remove --name $(ENV_NAME) --all -y
+	rm env
 
 # Compile C programs. Creates empty target for record keeping.
 programs: removePrimer qualTrim stitch
