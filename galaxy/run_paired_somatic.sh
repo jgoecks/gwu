@@ -45,17 +45,15 @@ vcfintersect -b target_regions.bed ${OUTPUT_DIR}/called.vcf > ${OUTPUT_DIR}/call
 
 # NOTE: the following steps are taken from cherry-analysis and should be updated as that repo is updated.
 
-# Annotate with SOMATIC to create final set of variants.
-# TODO: may need to set --tumor-thresh to -50 to pick up low-frequency variants.
+# Annotate with additional to create final set of variants.
 python annotate_somatic.py ${OUTPUT_DIR}/called_in_rois.vcf > ${OUTPUT_DIR}/final.vcf
 
-# Create GEMINI database.
+# Create GEMINI database and annotate with somatic information.
+# FIXME: create_gemini_db.sh actually creates final.norm.vcf.gz in the parent directory, but its difficult to use.
 ${HOME_DIR}/create_gemini_db.sh ${OUTPUT_DIR}/final.vcf ${OUTPUT_DIR}/tumor_normal.db ${FASTA}
-egrep '(^#)|SOMATIC' ${OUTPUT_DIR}/final.vcf > ${OUTPUT_DIR}/somatic_only.vcf
-vt decompose -s ${OUTPUT_DIR}/somatic_only.vcf | vt normalize -r ${FASTA} - > ${OUTPUT_DIR}/somatic_only.norm.vcf
-bgzip ${OUTPUT_DIR}/somatic_only.norm.vcf && tabix -p vcf ${OUTPUT_DIR}/somatic_only.norm.vcf.gz
-gemini annotate -f ${OUTPUT_DIR}/somatic_only.norm.vcf.gz -a boolean -c SOMATIC ${OUTPUT_DIR}/tumor_normal.db
-
-# Working query, but want to replace this with better query using annotated LODs and allele frequencies.
-find . -name tumor_normal.db | sort | parallel -j 1 \
-"echo {}; gemini query -q 'select chrom, start, ref, alt, gene, impact, SOMATIC, gt_alt_depths, gt_ref_depths, gt_depths from variants' --gt-filter 'gt_alt_depths.tumor >= 15 AND gt_alt_depths.normal <= 10' {}"
+vt decompose -s ${OUTPUT_DIR}/final.vcf | vt normalize -r ${FASTA} - > ${OUTPUT_DIR}/final.norm.vcf
+bgzip ${OUTPUT_DIR}/final.norm.vcf && tabix -p vcf ${OUTPUT_DIR}/final.norm.vcf.gz
+gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c tumor_aaf -t float -e TUMOR_AAF ${OUTPUT_DIR}/tumor_normal.db
+gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c normal_aaf -t float -e NORMAL_AAF ${OUTPUT_DIR}/tumor_normal.db
+gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c tumor_lod -t float -e TUMOR_LOD ${OUTPUT_DIR}/tumor_normal.db
+gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c normal_lod -t float -e NORMAL_LOD ${OUTPUT_DIR}/tumor_normal.db

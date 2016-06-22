@@ -24,16 +24,39 @@ BOWTIE2_INDICES=$(DATA_DIR)/data/hg19/bowtie2/hg19
 # Commands.
 #
 
+# Run FFPE analysis to identify variants shared b/t plasma and FFPE samples. This was used to provide results for Plate 7 datasets.
+ffpe_reports:
+	$(ACTIVATE_ENV) && bash -x ./run_ffpe_reports.sh
+
+# Process FFPE samples to create GEMINI tumor-normal databases using correct tumor-normal pairs.
+ffpe_samples:
+	$(ACTIVATE_ENV) && bash -x ./run_plate7_ffpe.sh
+
+# Query all databases for somatic mutations.
+# NOTE: this was used to provide results for Plate 6 datasets.
+# NOTE: cannot use tumor_lod because Freebayes often assigns highest genotype likelihood to reference when tumor allele frequency (AF) is low,
+# which in turn causes low AF tumor variants to be filtered out if tumor_lod is used as a criterion.
+query_all:
+	find . -name tumor_normal.db | sort | parallel -j 1 \
+	"echo {}; gemini query -q 'select chrom, start, ref, alt, gene, transcript, \
+							   impact, tumor_lod, normal_lod, tumor_aaf, normal_aaf, \
+							   gt_alt_depths, gt_ref_depths, gt_depths from variants \
+							   where normal_lod > 3.5 and tumor_aaf >= 0.05 and \
+							   (normal_aaf <= 0.001 OR tumor_aaf/normal_aaf > 5)' \
+							   --gt-filter 'gt_alt_depths.tumor >= 15 AND gt_alt_depths.normal <= 10' {} \
+							   | sort -k1,1 -k2,2n"
+
 # Process all matched tumor (P = plasma)-normal (BC = buffy coat) pairs in the current
 # directory to create GEMINI databases and do somatic variant detection. This command
 # should be run after run_dir has completed successfully; it uses the BAMs created via run_dir
 # as inputs.
 run_paired_somatic: env
-	$(ACTIVATE_ENV); parallel -j 1 --xapply "bash -x run_paired_somatic.sh {1} {2} {=1 s/-P_.*$///g =}" ::: *-P_* ::: *BC_*
+	# Create databases.
+	# $(ACTIVATE_ENV); parallel -j 1 --xapply "bash -x run_paired_somatic.sh {1} {2} {=1 s/-P_.*$///g =}" ::: *-P_* ::: *BC_*
 
 # Process all fastq files in a directory.
 run_dir: all env target_primers.bed
-	$(ACTIVATE_ENV) && bash -x ./run_dir.sh ~/projects/gwu/galaxy/target_primers.bed $(FASTA) $(BOWTIE2_INDICES) ~/projects/rcc/Plate7
+	$(ACTIVATE_ENV) && bash -x ./run_dir.sh ~/projects/gwu/galaxy/target_primers.bed $(FASTA) $(BOWTIE2_INDICES) ~/projects/rcc/Plate3
 
 run: all env
 	#$(ACTIVATE_ENV) && bash -x ./run.sh $(PRIMERS) $(FASTA) $(BOWTIE2_INDICES)
@@ -60,7 +83,7 @@ target_regions.bed:
 # Set up conda virtual environment with needed packages and tools.
 env:
 	# Special installation necessary for samtools to link correctly on linux.
-	conda create -n $(ENV_NAME) -y python
+	conda create -n $(ENV_NAME) -y python pandas
 	$(ACTIVATE_ENV); pip install bioblend; \
 		conda install -c bioconda -y bowtie2 varscan vcflib datamash freebayes parallel vt snpeff gemini; \
 		conda install -c r -y ncurses && conda install -c bioconda -y samtools; \
