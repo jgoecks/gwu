@@ -24,7 +24,7 @@ def read_results(sample):
 
 
 if __name__ == "__main__":
-    # Returns true iff there is a plasma variant that matches variants in other tissue(s).
+    # Returns true iff there is a plasma variant that matches variants in other tissues.
     def has_shared_plasma(df):
         return len(df) > 1 and len(df[df["tissue"] == "P"]) > 0
 
