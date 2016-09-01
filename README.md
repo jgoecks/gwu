@@ -26,3 +26,9 @@
    ```
    $ make query_all
    ```
+
+5. NOTE: for FFPE samples matched to a plasma/buffy coat sample (e.g. plate7), steps 3 and 4 must be replaced with:
+   ```
+   $ make ffpe_samples
+   $ make ffpe_reports
+   ```
