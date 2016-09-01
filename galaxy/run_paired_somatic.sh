@@ -46,7 +46,7 @@ vcfintersect -b target_regions.bed ${OUTPUT_DIR}/called.vcf > ${OUTPUT_DIR}/call
 # NOTE: the following steps are taken from cherry-analysis and should be updated as that repo is updated.
 
 # Annotate with additional to create final set of variants.
-python annotate_somatic.py ${OUTPUT_DIR}/called_in_rois.vcf > ${OUTPUT_DIR}/final.vcf
+python annotate_tumor_normal.py ${OUTPUT_DIR}/called_in_rois.vcf > ${OUTPUT_DIR}/final.vcf
 
 # Create GEMINI database and annotate with somatic information.
 # FIXME: create_gemini_db.sh actually creates final.norm.vcf.gz in the parent directory, but its difficult to use.
@@ -57,3 +57,4 @@ gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c tumor_a
 gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c normal_aaf -t float -e NORMAL_AAF ${OUTPUT_DIR}/tumor_normal.db
 gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c tumor_lod -t float -e TUMOR_LOD ${OUTPUT_DIR}/tumor_normal.db
 gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c normal_lod -t float -e NORMAL_LOD ${OUTPUT_DIR}/tumor_normal.db
+gemini annotate -f ${OUTPUT_DIR}/final.norm.vcf.gz -a extract -o last -c tumor_mabq -t float -e TUMOR_MABQ ${OUTPUT_DIR}/tumor_normal.db

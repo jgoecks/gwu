@@ -42,7 +42,8 @@ query_all:
 	"echo {}; gemini query -q 'select chrom, start, ref, alt, gene, transcript, \
 							   impact, tumor_lod, normal_lod, tumor_aaf, normal_aaf, \
 							   gt_alt_depths, gt_ref_depths, gt_depths from variants \
-							   where normal_lod > 3.5 and tumor_aaf >= 0.05 and \
+							   where normal_lod > 3.5 and tumor_aaf >= 0.05 and tumor_mabq >= 30 and \
+							   aaf_exac_all <= 0.01 and aaf_1kg_all <= 0.01 and aaf_esp_all <= 0.01 and \
 							   (normal_aaf <= 0.001 OR tumor_aaf/normal_aaf > 5)' \
 							   --gt-filter 'gt_alt_depths.tumor >= 15 AND gt_alt_depths.normal <= 10' {} \
 							   | sort -k1,1 -k2,2n"
@@ -52,7 +53,7 @@ query_all:
 # should be run after run_dir has completed successfully; it uses the BAMs created via run_dir
 # as inputs.
 run_paired_somatic: all env
-	$(ACTIVATE_ENV); parallel -j 1 --xapply "bash -x run_paired_somatic.sh {1} {2} {=1 s/-plasma_.*$///g =}" ::: *-plasma_* ::: *BC_*
+	$(ACTIVATE_ENV); parallel -j 1 --xapply "bash -x run_paired_somatic.sh {1} {2} {=1 s/-Plasma_.*$///g =}" ::: *-Plasma_* ::: *BC_*
 
 # Process all fastq files in a directory.
 run_dir: all env target_primers.bed
