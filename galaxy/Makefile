@@ -52,8 +52,8 @@ query_all:
 # directory to create GEMINI databases and do somatic variant detection. This command
 # should be run after run_dir has completed successfully; it uses the BAMs created via run_dir
 # as inputs.
-run_paired_somatic: all env
-	$(ACTIVATE_ENV); parallel -j 1 --xapply "bash -x run_paired_somatic.sh {1} {2} {=1 s/-Plasma_.*$///g =}" ::: *-Plasma_* ::: *BC_*
+run_paired_somatic: all env target_regions.bed
+	$(ACTIVATE_ENV); parallel -j 1 --xapply "bash -x run_paired_somatic.sh {1} {2} {=1 s/-Plasma_.*$///g =} $(FASTA)" ::: *-Plasma_* ::: *BC_*
 
 # Process all fastq files in a directory.
 run_dir: all env target_primers.bed

@@ -1,14 +1,13 @@
 # check command-line arguments
-if [ $# -ne 3 ]; then
-  echo "Usage: `basename $0`  <tumor_dir>  <normal_dir> <output_dir>" 1>&2
+if [ $# -ne 4 ]; then
+  echo "Usage: `basename $0`  <tumor_dir>  <normal_dir> <output_dir> <fasta>" 1>&2
   exit -1
 fi
 
 TUMOR_DIR=$1
 NORMAL_DIR=$2
 OUTPUT_DIR=$3
-
-FASTA=/home/jgoecks/projects/gwu/data/hg19/hg19.fa
+FASTA=$4
 
 mkdir ${OUTPUT_DIR}
 
@@ -30,7 +29,7 @@ samtools index ${OUTPUT_DIR}/normal.bam
 
 # Call variants using Freebayes.
 PATH=${PATH}:.
-${HOME_DIR}/fasta_generate_regions.py ${FASTA}.fai 10000000 > regions.txt; \
+fasta_generate_regions.py ${FASTA}.fai 10000000 > regions.txt; \
 freebayes-parallel regions.txt 6 --bam ${OUTPUT_DIR}/tumor.bam --bam ${OUTPUT_DIR}/normal.bam \
     --fasta-reference ${FASTA} --theta "0.001" \
     --ploidy "2" -J -K -n "0" --haplotype-length "3" --min-repeat-size "5" \
