@@ -57,7 +57,7 @@ run_paired_somatic: all env target_regions.bed
 
 # Process all fastq files in a directory.
 run_dir: all env target_primers.bed
-	$(ACTIVATE_ENV) && bash -x ./run_dir.sh ~/projects/gwu/galaxy/target_primers.bed $(FASTA) $(BOWTIE2_INDICES) $(TARGET_DIR)
+	$(ACTIVATE_ENV) && bash -x ./run_dir.sh target_primers.bed $(FASTA) $(BOWTIE2_INDICES) $(TARGET_DIR)
 
 run: all env
 	#$(ACTIVATE_ENV) && bash -x ./run.sh $(PRIMERS) $(FASTA) $(BOWTIE2_INDICES)
